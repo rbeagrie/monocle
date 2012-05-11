@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <strong>{{ gene.gene_short_name }}</strong>{% endblock %}
+
+{% block content %}
+
+
+<h1>Overview for {{ gene.gene_short_name }} - {{ gene.locus }}</h1>
+
+<p><img src="/genes/static/genes/{{ gene.gene_short_name }}.png" /></p>
+
+<p><a href="/genes/{{ gene.gene_short_name }}/tss">Tss usage</a></p>
+
+<p><a href="/genes/{{ gene.gene_short_name }}/isoforms">Isoform Expression</a></p>
+
+<p><a href="/genes">Back to gene search</a></p>
+
+{% endblock %}

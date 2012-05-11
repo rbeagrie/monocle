@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block nav %}<li><a href="#">Login</a></li>{% endblock %}
+
+{% block breadcrumb %}<strong>Login</strong>{% endblock %}
+
+{% block content %}
+
+{% if logout %}<p><strong>You have been logged out.</strong></p>{% endif %}
+
+{% if form.errors %}<p><strong>Incorrect username or password.</strong></p>{% endif %}
+<h1>Log in here:</h1>
+
+<form method="post" action="/genes/login/">
+{% csrf_token %}
+<table>
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="login" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+{% endblock %}

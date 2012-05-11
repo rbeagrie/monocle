@@ -40,3 +40,5 @@ Thumbs.db
 
 cuffData.*
 monocle.db
+monocle/genes/static/*
+!monocle/genes/static/css*
