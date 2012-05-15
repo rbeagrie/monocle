@@ -1,3 +1,5 @@
+import os
+
 # Django settings for monocle project.
 
 DEBUG = True
@@ -7,12 +9,20 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
+# Special Monocle Settings
+
+PROJECT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..'))
+GRAPH_DIR = os.path.join(PROJECT_PATH,"monocle","genes","static")
+R_SCRIPTS = os.path.join(PROJECT_PATH,"r_functions.r")
+R_EXEC = "C:\\Program Files\\R\\R-2.13.2\\bin\\Rscript.exe"
+
+
 MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'E:\\Rob\\Bioinformatics\\Monocle\\monocle.db',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(PROJECT_PATH,'monocle.db'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -20,7 +30,7 @@ DATABASES = {
     },
 	'cuff': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'E:\\Rob\\Bioinformatics\\Monocle\\cuffData.db',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(PROJECT_PATH,'cuffData.db'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -58,7 +68,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = 'E:/Rob/Bioinformatics/Monocle/temp'
+MEDIA_ROOT = os.path.join(PROJECT_PATH,'temp')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -123,7 +133,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-	'E:/Rob/Bioinformatics/Monocle/templates'
+	os.path.join(PROJECT_PATH,'templates')
 )
 
 INSTALLED_APPS = (
