@@ -13,7 +13,6 @@ r_exec = "C:\\Program Files\\R\\R-2.13.2\\bin\\Rscript.exe"
 @login_required
 def index(request):
 
-	gene_list = ['Sox2','Fgf5']
 	return render_to_response('genes/index.html',{'host':request.META['HTTP_HOST']},context_instance=RequestContext(request))
 
 @login_required
@@ -54,6 +53,10 @@ def search(request):
 	try:
 		g = Gene.objects.get(gene_short_name=gene_id)
 	except Gene.DoesNotExist:
-		return render_to_response('genes/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
+		try:
+			gene_id = gene_id.capitalize()
+			g = Gene.objects.get(gene_short_name=gene_id)
+		except Gene.DoesNotExist:
+			return render_to_response('genes/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
 	return redirect('http://'+request.META['HTTP_HOST']+'/genes/%s/'%gene_id)
 	
