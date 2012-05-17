@@ -44,6 +44,12 @@ def isoforms(request, gene_id):
 	if not os.path.exists(graph_path):
 		dostuff = subprocess.call([R_EXEC,R_SCRIPTS,'--args','isoform',gene_id,graph_path], shell = True)
 	return render_to_response('genes/isoforms.html', {'gene' : g, 'host':request.META['HTTP_HOST']} ,context_instance=RequestContext(request))
+	
+@login_required
+def similar(request, gene_id):
+	g = get_object_or_404(Gene, gene_short_name=gene_id)
+	similar = g.get_similar()
+	return render_to_response('genes/similar.html', {'gene' : g, 'similar': similar[1:11], 'host':request.META['HTTP_HOST']} ,context_instance=RequestContext(request))
 
 @login_required
 def search(request):

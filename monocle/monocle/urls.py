@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     url(r'^genes/(?P<gene_id>\w+)/$', 'genes.views.detail'),
     url(r'^genes/(?P<gene_id>\w+)/tss/$', 'genes.views.tss'),
     url(r'^genes/(?P<gene_id>\w+)/isoforms/$', 'genes.views.isoforms'),
+    url(r'^genes/(?P<gene_id>\w+)/similar/$', 'genes.views.similar'),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

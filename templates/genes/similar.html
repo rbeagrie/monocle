@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <a href="http://{{ host }}/genes/{{ gene.gene_short_name }}">{{ gene.gene_short_name }}</a> / <strong> Similar Genes </strong>{% endblock %}
+
+{% block content %}
+
+
+<h1>Genes similar to {{ gene.gene_short_name }}</h1>
+
+<table>
+
+<tr>
+
+<th>Gene Name</th>
+
+<th>Maximum FPKM Value</th>
+
+</tr>
+
+{% for similar_gene in similar %}
+
+<tr>
+<td><a href="http://{{ host }}/genes/{{ similar_gene.gene_short_name }}">{{ similar_gene.gene_short_name }}</td>
+<td> {{ similar_gene.max_fpkm }} </td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<p><a href="/genes/{{ gene.gene_short_name }}">Back to gene {{ gene.gene_short_name }}</a></p>
+
+{% endblock %}
