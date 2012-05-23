@@ -55,12 +55,15 @@ def similar(request, gene_id):
 def search(request):
 	gene_id=request.GET['gene']
 	try:
-		g = Gene.objects.get(gene_short_name=gene_id)
+		g = Gene.objects.get(gene_short_name__iexact=gene_id)
 	except Gene.DoesNotExist:
 		try:
-			gene_id = gene_id.capitalize()
-			g = Gene.objects.get(gene_short_name=gene_id)
+			g = Gene.objects.get(gene_short_name__istartswith=gene_id+',')
 		except Gene.DoesNotExist:
-			return render_to_response('genes/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
-	return redirect('http://'+request.META['HTTP_HOST']+'/genes/%s/'%gene_id)
+			try:
+				g = Gene.objects.get(gene_short_name__iendswith=','+gene_id)
+			except Gene.DoesNotExist:
+				return render_to_response('genes/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
+	
+	return redirect('http://'+request.META['HTTP_HOST']+'/genes/%s/' % g.gene_short_name)
 	
