@@ -6,7 +6,6 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.template import RequestContext
 from genes.models import Gene
 import os, subprocess
-from monocle.settings import GRAPH_DIR, R_EXEC, R_SCRIPTS
 import random
 import django
 import datetime
