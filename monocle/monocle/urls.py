@@ -14,6 +14,10 @@ urlpatterns = patterns('',
     url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/tss/$', 'genes.views.tss'),
     url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/isoforms/$', 'genes.views.isoforms'),
     url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/similar/$', 'genes.views.similar'),
+    url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/graph.png$', 'genes.views.gene_graph'),
+    url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/tss/graph.png$', 'genes.views.tss_graph'),
+    url(r'^genes/(?P<gene_id>[A-Za-z0-9\,]+)/isoforms/graph.png$', 'genes.views.isoform_graph'),
+	
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

@@ -70,3 +70,23 @@ class GeneData(models.Model):
         conf_hi = models.FloatField()
         conf_lo = models.FloatField()
         quant_status = models.CharField(max_length=45)
+
+class TssData(models.Model):
+        class Meta:
+                db_table = 'TSSData'
+        TSS_group = models.ForeignKey(Tss)
+        sample_name = models.ForeignKey(Sample,db_column='sample_name')
+        fpkm = models.FloatField(primary_key=True)
+        conf_hi = models.FloatField()
+        conf_lo = models.FloatField()
+        quant_status = models.CharField(max_length=45)
+
+class IsoformData(models.Model):
+        class Meta:
+                db_table = 'isoformData'
+        isoform = models.ForeignKey(Isoform)
+        sample_name = models.ForeignKey(Sample,db_column='sample_name')
+        fpkm = models.FloatField(primary_key=True)
+        conf_hi = models.FloatField()
+        conf_lo = models.FloatField()
+        quant_status = models.CharField(max_length=45)

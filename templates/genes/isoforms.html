@@ -6,13 +6,13 @@
 
 <h1>Isoform expression for {{ gene.gene_short_name }} - {{ gene.locus }}</h1>
 
-<p><img src="/genes/static/isoforms/{{ gene.gene_short_name }}.png" /></p>
+<p><img src="/genes/{{ gene.gene_short_name }}/isoforms/graph.png" /></p>
 
 <h2>{{ gene.gene_short_name }} Isoforms</h2>
 
 {% for isoform in gene.isoform_set.all %}
 
-<p>{{ isoform.isoform_id }} - <a href="http://www.ensembl.org/Mus_musculus/Search/Details?species=Mus_musculus;idx=Transcript;end=1;q={{ isoform.nearest_ref_id }}">{{ isoform.nearest_ref_id }}</a></p>
+<p><a href="http://www.ensembl.org/Mus_musculus/Search/Details?species=Mus_musculus;idx=Transcript;end=1;q={{ isoform.nearest_ref_id }}">{{ isoform.nearest_ref_id }}</a></p>
 
 {% endfor %}
 

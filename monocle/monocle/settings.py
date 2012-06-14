@@ -12,9 +12,8 @@ ADMINS = (
 # Special Monocle Settings
 
 PROJECT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..'))
-GRAPH_DIR = os.path.join(PROJECT_PATH,"monocle","genes","static")
-R_SCRIPTS = os.path.join(PROJECT_PATH,"r_functions.r")
-R_EXEC = "C:\\Program Files\\R\\R-2.13.2\\bin\\Rscript.exe"
+MONOCLE_HOST = 'localhost'
+MONOCLE_PORT = 8000
 
 
 MANAGERS = ADMINS
