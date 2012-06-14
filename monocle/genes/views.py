@@ -65,12 +65,61 @@ def search(request):
 	
 	return redirect('http://'+request.META['HTTP_HOST']+'/genes/%s/' % g.gene_short_name)
 	
+@login_required
+def gene_graph(request, gene_id):
+	
+	g = get_object_or_404(Gene, gene_short_name=gene_id)
+	
+	graph = expression_line()
+	graph.add_gene(g)
+		
+	graph.ax.set_title(gene_id)
+	
+	canvas=FigureCanvas(graph.fig)
+	response=django.http.HttpResponse(content_type='image/png')
+	canvas.print_png(response)
+	return response	
+
+@login_required	
+def tss_graph(request, gene_id):
+	
+	g = get_object_or_404(Gene, gene_short_name=gene_id)
+	
+	print g.tss_set.all()
+	
+	graph = expression_line()
+	graph.add_tss(g)
+		
+	graph.ax.set_title(gene_id)
+	
+	canvas=FigureCanvas(graph.fig)
+	response=django.http.HttpResponse(content_type='image/png')
+	canvas.print_png(response)
+	return response
+
+@login_required	
+def isoform_graph(request, gene_id):
+	
+	g = get_object_or_404(Gene, gene_short_name=gene_id)
+	
+	print g.isoform_set.all()
+	
+	graph = expression_line()
+	graph.add_isoforms(g)
+		
+	graph.ax.set_title(gene_id)
+	
+	canvas=FigureCanvas(graph.fig)
+	response=django.http.HttpResponse(content_type='image/png')
+	canvas.print_png(response)
+	return response
+
 class expression_line():
 	
 	def __init__(self):
 		matplotlib.rc('axes',edgecolor='white')
 
-		self.fig=Figure(figsize=(11,6))
+		self.fig=Figure(figsize=(13,6))
 		self.fig.set_facecolor('white')
 		self.ax=self.fig.add_subplot(111)
 		self.ax.set_axis_bgcolor('#EEEEEE')
@@ -94,7 +143,8 @@ class expression_line():
 		
 		gene_line = self.add_data(gene_data)
 		for i,gd in enumerate(gene_data):
-			draw_error(self.ax,i,gd.conf_lo,gd.conf_hi,color=gene_line[0].get_color())
+		
+			self.draw_error(i,gd.conf_lo,gd.conf_hi,color=gene_line[0].get_color())
 			
 		samples = map(lambda f: f.sample_name.sample_name,gene_data)
 		self.ax.set_xticks(range(len(samples)))
@@ -165,57 +215,10 @@ class expression_line():
 		
 		self.ax.set_ylim(self.y_low-0.5,self.y_high+0.5)
 	
-	
-def gene_graph(request, gene_id):
-	
-	g = get_object_or_404(Gene, gene_short_name=gene_id)
-	
-	graph = expression_line()
-	graph.add_gene(g)
-		
-	graph.ax.set_title(gene_id)
-	
-	canvas=FigureCanvas(graph.fig)
-	response=django.http.HttpResponse(content_type='image/png')
-	canvas.print_png(response)
-	return response	
-	
-def tss_graph(request, gene_id):
-	
-	g = get_object_or_404(Gene, gene_short_name=gene_id)
-	
-	print g.tss_set.all()
-	
-	graph = expression_line()
-	graph.add_tss(g)
-		
-	graph.ax.set_title(gene_id)
-	
-	canvas=FigureCanvas(graph.fig)
-	response=django.http.HttpResponse(content_type='image/png')
-	canvas.print_png(response)
-	return response
-	
-def isoform_graph(request, gene_id):
-	
-	g = get_object_or_404(Gene, gene_short_name=gene_id)
-	
-	print g.isoform_set.all()
-	
-	graph = expression_line()
-	graph.add_isoforms(g)
-		
-	graph.ax.set_title(gene_id)
-	
-	canvas=FigureCanvas(graph.fig)
-	response=django.http.HttpResponse(content_type='image/png')
-	canvas.print_png(response)
-	return response
-	
-def draw_error(axes,x,y_low,y_high,color,bar_width=0.1):
-	v_line = matplotlib.lines.Line2D([x,x],[y_low,y_high],zorder=20,color=color)
-	top_h = matplotlib.lines.Line2D([x-bar_width,x+bar_width],[y_high,y_high],zorder=20,color=color)
-	bottom_h = matplotlib.lines.Line2D([x-bar_width,x+bar_width],[y_low,y_low],zorder=20,color=color)
-	axes.add_line(v_line)
-	axes.add_line(top_h)
-	axes.add_line(bottom_h)
+	def draw_error(self,x,y_low,y_high,color,bar_width=0.1):
+		v_line = matplotlib.lines.Line2D([x,x],[y_low,y_high],zorder=20,color=color)
+		top_h = matplotlib.lines.Line2D([x-bar_width,x+bar_width],[y_high,y_high],zorder=20,color=color)
+		bottom_h = matplotlib.lines.Line2D([x-bar_width,x+bar_width],[y_low,y_low],zorder=20,color=color)
+		self.ax.add_line(v_line)
+		self.ax.add_line(top_h)
+		self.ax.add_line(bottom_h)
