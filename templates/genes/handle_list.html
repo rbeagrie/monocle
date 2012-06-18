@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<strong>Genes</strong>{% endblock %}
+
+{% block nav %}
+		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
+		<li><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
+		<li class="active"><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
+		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		{% endblock %}
+
+{% block content %}
+
+
+<h1>Uploaded a list of {{ genes_matched }} genes</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+
+<p>{% for gene in gene_list %} {{ gene.gene_short_name }}, {% endfor %}</p>
+
+<h2>{{ not_matched }} genes could not be found:</h2>
+
+<p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}</p>
+
+<p><a href="http://{{ host }}/genes/lists/{{ list_id }}">Continue to Gene List</a></p>
+
+{% endblock %}

@@ -40,6 +40,11 @@ class Gene(models.Model):
 
         def max_fpkm(self):
                 return max(map(lambda f: f.fpkm,self.genedata_set.all()))
+				
+class GeneList(models.Model):
+	name = models.CharField(max_length=45)
+	temp = models.BooleanField(default=True)
+	genes = models.ManyToManyField(Gene)
 	
 class Tss(models.Model):
 	class Meta:

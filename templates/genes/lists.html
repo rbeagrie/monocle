@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <a href="http://{{ host }}/genes/{{ gene.gene_short_name }}">{{ gene.gene_short_name }}</a> / <strong> Similar Genes </strong>{% endblock %}
+
+{% block nav %}
+		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
+		<li class="active"><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
+		<li><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
+		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		{% endblock %}
+
+{% block content %}
+
+
+<h1>All Gene Lists</h1>
+
+<table>
+
+<tr>
+
+<th>Gene List ID</th>
+
+<th>Gene List Name</th>
+
+</tr>
+
+{% for list in lists %}
+
+<tr>
+<td><a href="http://{{ host }}/genes/lists/{{ list.pk }}">{{ list.pk }}</td>
+<td><a href="http://{{ host }}/genes/lists/{{ list.pk }}">{{ list.name }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}
