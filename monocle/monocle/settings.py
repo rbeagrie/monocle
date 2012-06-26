@@ -14,7 +14,7 @@ ADMINS = (
 PROJECT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..'))
 MONOCLE_IP = '127.0.0.1'
 MONOCLE_PORT = '6565'
-MONOCLE_VERSION = '0.025'
+MONOCLE_VERSION = '0.03'
 
 
 MANAGERS = ADMINS
