@@ -14,6 +14,7 @@ ADMINS = (
 PROJECT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..'))
 MONOCLE_IP = '127.0.0.1'
 MONOCLE_PORT = '6565'
+MONOCLE_VERSION = '0.025'
 
 
 MANAGERS = ADMINS
@@ -124,6 +125,11 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'monocle.urls'
+
+TEMPLATE_CONTEXT_PROCESSORS = ('monocle.context_processors.header',
+	'django.contrib.auth.context_processors.auth',
+	'django.core.context_processors.static'
+)
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'monocle.wsgi.application'
