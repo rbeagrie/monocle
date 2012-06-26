@@ -19,14 +19,14 @@ import matplotlib
 @login_required
 def index(request):
 
-	return render_to_response('genes/index.html',{'host':request.META['HTTP_HOST']},context_instance=RequestContext(request))
+	return render_to_response('genes/index.html',{},context_instance=RequestContext(request))
 
 @login_required
 def detail(request, gene_id):
 	if not request.user.is_authenticated():
 		return render_to_response('myapp/login_error.html')
 	g = get_object_or_404(Gene, gene_short_name=gene_id)
-	return render_to_response('genes/detail.html', {'gene' : g, 'host':request.META['HTTP_HOST']} ,context_instance=RequestContext(request))
+	return render_to_response('genes/detail.html', {'gene' : g} ,context_instance=RequestContext(request))
 
 @login_required
 def tss(request, gene_id):
@@ -36,18 +36,18 @@ def tss(request, gene_id):
 	for i in iss:
 		tss_set.add(i.TSS_group)
 	tss_list = sorted(list(tss_set),key=lambda t:t.TSS_group_id)
-	return render_to_response('genes/tss.html', {'gene' : g,'tss': tss_list, 'host':request.META['HTTP_HOST']},context_instance=RequestContext(request) )
+	return render_to_response('genes/tss.html', {'gene' : g,'tss': tss_list},context_instance=RequestContext(request) )
 
 @login_required
 def isoforms(request, gene_id):
 	g = get_object_or_404(Gene, gene_short_name=gene_id)
-	return render_to_response('genes/isoforms.html', {'gene' : g, 'host':request.META['HTTP_HOST']} ,context_instance=RequestContext(request))
+	return render_to_response('genes/isoforms.html', {'gene' : g} ,context_instance=RequestContext(request))
 	
 @login_required
 def similar(request, gene_id):
 	g = get_object_or_404(Gene, gene_short_name=gene_id)
 	similar = g.get_similar()
-	return render_to_response('genes/similar.html', {'gene' : g, 'similar': similar[1:11], 'host':request.META['HTTP_HOST']} ,context_instance=RequestContext(request))
+	return render_to_response('genes/similar.html', {'gene' : g, 'similar': similar[1:11]} ,context_instance=RequestContext(request))
 
 @login_required
 def search(request):
@@ -104,12 +104,12 @@ def isoform_graph(request, gene_id):
 @login_required
 def show_lists(request):
 	l = GeneList.objects.filter(temp=False)
-	return render_to_response('genes/lists.html',{'host':request.META['HTTP_HOST'],'lists':l},context_instance=RequestContext(request))
+	return render_to_response('genes/lists.html',{'lists':l},context_instance=RequestContext(request))
 	
 @login_required	
 def upload_genelist(request):
 
-	return render_to_response('genes/upload.html',{'host':request.META['HTTP_HOST']},context_instance=RequestContext(request))
+	return render_to_response('genes/upload.html',{},context_instance=RequestContext(request))
 	
 @login_required
 def handle_list(request):
@@ -140,8 +140,7 @@ def handle_list(request):
 		temp_list.save()
 		genes = temp_list.genes.all()
 		if len(not_found):
-			return render_to_response('genes/handle_list.html',{'host':request.META['HTTP_HOST'],
-																'gene_list':genes,
+			return render_to_response('genes/handle_list.html',{'gene_list':genes,
 																'genes_matched':len(genes),
 																'not_found':not_found,
 																'not_matched':len(not_found),
@@ -161,7 +160,7 @@ def list_detail(request, list_id):
 	else:
 		heat = False
 	
-	return render_to_response('genes/list_detail.html',{'host':request.META['HTTP_HOST'],'list':l,'heat':heat},context_instance=RequestContext(request))
+	return render_to_response('genes/list_detail.html',{'list':l,'heat':heat},context_instance=RequestContext(request))
 
 def list_graph(request, list_id):
 
