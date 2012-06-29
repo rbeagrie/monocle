@@ -4,6 +4,20 @@ class Gene(models.Model):
 	locus = models.CharField(max_length=45)
 	length = models.IntegerField()
 	
+	def first_name(self):
+		name = self.genename_set.all()[0]
+		return name.name,name.gene_name_set.name
+	
+	def __unicode__(self):
+		return 'Gene %s (%s)' % self.first_name()
+	
+	@staticmethod
+	def from_tracking_id_and_dataset(tracking_id,dataset):
+		namesetname = 'Cufflinks Tracking, dataset %i' % dataset.pk
+		nameset = GeneNameSet.objects.get(name=namesetname)
+		name = GeneName.objects.get(name=tracking_id,gene_name_set=nameset)
+		return name.gene
+	
 class GeneNameSet(models.Model):
 	name = models.CharField(max_length=70)
 	description = models.TextField()
@@ -22,6 +36,13 @@ class Sample(models.Model):
 	name = models.CharField(max_length=70)
 	description = models.TextField()
 	
+	def __unicode__(self):
+		return 'Sample %s from dataset %i (%s)' % (self.name,self.dataset.pk,self.dataset.name)
+	
+	@staticmethod
+	def from_dataset_and_name(dataset,name):
+		return Sample.objects.filter(dataset=dataset).filter(name=name)[0]
+	
 class FeatureType(models.Model):
 	name = models.CharField(max_length=70)
 	description = models.TextField()
@@ -33,6 +54,13 @@ class Feature(models.Model):
 	tracking_id = models.CharField(max_length=45)
 	locus = models.CharField(max_length=45)
 	length = models.IntegerField()
+	
+	def __unicode__(self):
+		return '%s feature: %s (%s)' % (self.type.name,self.name,self.tracking_id)
+	
+	@staticmethod
+	def from_tracking_id_and_type(tracking_id,type):
+		return Feature.objects.filter(tracking_id=tracking_id).filter(type=type)[0]
 	
 class FeatureData(models.Model):
 	feature = models.ForeignKey(Feature)

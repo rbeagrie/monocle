@@ -102,9 +102,59 @@ def process_genes_file(genes_fpkms,dataset):
 			value,low,high,status = fields[9+(i*4):13+(i*4)]
 			FeatureData(feature=feature,sample=sample,value=value,low_confidence=low,high_confidence=high,status=status).save()
 			
+def process_tests_file(tests_file,dataset,feature,test):
+	feature_type,created = FeatureType.objects.get_or_create(name=feature)
+	test_type,created = TestType.objects.get_or_create(name=test)
+	with open(tests_file) as tests:
+		next(tests)
+		for line in tests:
+			fields = line.split()
+			feature = Feature.from_tracking_id_and_type(fields[1],feature_type)
+			sample1 = Sample.from_dataset_and_name(dataset,fields[4])
+			sample2 = Sample.from_dataset_and_name(dataset,fields[5])
+			TestResult(feature=feature,
+						type=test_type,
+						sample1=sample1,
+						sample2=sample2,
+						test_statistic=fields[10],
+						status=fields[6],
+						p_value=fields[11],
+						q_value=fields[12]
+						).save()
+						
+def process_feature_file(filename,dataset,feature):
+	
+	feature_file = open(filename)
+	first_line = feature_file.readline()
+	headers = first_line.split()
+	no_samples = (len(headers) - 9)/4
+	samples = []
+	for i in range(no_samples):
+		field_no = (i*4)+9
+		sample_name = headers[field_no][:-5]
+		samples.append(Sample.from_dataset_and_name(dataset,sample_name))
+	
+	feature_type,created = FeatureType.objects.get_or_create(name=feature)
+	
+	for line in feature_file:
+		fields = line.split()
+		gene = Gene.from_tracking_id_and_dataset(fields[3],dataset)
+		print gene
+		'''		
+		short_name = GeneName(gene=gene,gene_name_set=short_nameset,name=fields[4])
+		short_name.save()
 		
-	
-	
+		GeneName(gene=gene,gene_name_set=tracking_nameset,name=fields[0]).save()
+		
+		GeneName(gene=gene,gene_name_set=gene_id_nameset,name=fields[3]).save()
+		
+		feature = Feature(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0)
+		feature.save()
+		
+		for i,sample in enumerate(samples):
+			
+			value,low,high,status = fields[9+(i*4):13+(i*4)]
+			FeatureData(feature=feature,sample=sample,value=value,low_confidence=low,high_confidence=high,status=status).save()'''
 		
 def process_cufflinks_directory(cuffdir):
 	
@@ -115,6 +165,16 @@ def process_cufflinks_directory(cuffdir):
 	dataset.save()
 	
 	process_genes_file(genes_fpkm_file,dataset)
+	
+	genes_tests_file = os.path.join(cuffdir,'gene_exp.diff')
+	assert os.path.exists(genes_tests_file)
+	
+	process_tests_file(genes_tests_file,dataset,'whole_gene','expression_t_test')
+	
+	isoforms_file = os.path.join(cuffdir,'isoforms.fpkm_tracking')
+	assert os.path.exists(isoforms_file)
+	
+	process_feature_file(isoforms_file,dataset,'isoform')
 
 def import_cufflinks(argset=[], **kwargs):
 	
