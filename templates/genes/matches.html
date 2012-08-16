@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <a href="http://{{ host }}/genes/{{ gene.gene_short_name }}">{{ gene.gene_short_name }}</a> / <strong> Similar Genes </strong>{% endblock %}
+
+{% block nav %}
+		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
+		<li class="active"><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
+		<li><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
+		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		{% endblock %}
+
+{% block content %}
+
+
+<h1>Multiple genes matched your search:</h1>
+
+<table>
+
+<tr>
+
+<th>Gene Name</th>
+
+<th>Gene Name Set</th>
+
+</tr>
+
+{% for name in names %}
+
+<tr>
+<td><a href="http://{{ host }}/genes/{{ name.gene.pk }}">{{ name.name }}</td>
+<td><a href="http://{{ host }}/genes/{{ name.gene.pk }}">{{ name.gene_name_set.name }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}

@@ -7,6 +7,7 @@ Adapted to run as a management command
 
 import logging, sys, os, signal, time, errno, webbrowser
 from socket import gethostname
+from optparse import make_option
 from django.core.management.base import BaseCommand
 
 
@@ -65,7 +66,15 @@ CPSERVER_OPTIONS = {
 class Command(BaseCommand):
     help = "CherryPy Server for project. Requires CherryPy."
     args = "[various KEY=val options, use `runcpserver help` for help]"
-
+    
+    option_list = BaseCommand.option_list + (
+        make_option('--nearest_ref',
+            action='store_true',
+            dest='delete',
+            default=False,
+            help='Delete poll instead of closing it'),
+        )
+        
     def handle(self, *args, **options):
         from django.conf import settings
         from django.utils import translation

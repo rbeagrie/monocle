@@ -4,16 +4,29 @@
 
 {% block content %}
 
+<h1>Overview for {{ gene }} - {{ gene.locus }}</h1>
 
-<h1>Overview for {{ gene.gene_short_name }} - {{ gene.locus }}</h1>
+{% for dataset in datasets %}
 
-<p><img src="/genes/{{ gene.gene_short_name }}/graph.png" /></p>
+<h2>{{ dataset.name }}</h2>
 
-<p><a href="/genes/{{ gene.gene_short_name }}/tss">Tss usage</a></p>
+<p><img src="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/graph.png" /></p>
 
-<p><a href="/genes/{{ gene.gene_short_name }}/isoforms">Isoform Expression</a></p>
+{% if dataset.tss %}
 
-<p><a href="/genes/{{ gene.gene_short_name }}/similar">Similar Genes</a> (Warning - this may take a long time)</p>
+<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/tss">Tss usage</a></p>
+
+{% endif %}
+
+{% if dataset.isoform %}
+
+<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/isoforms">Isoform Expression</a></p>
+
+{% endif %}
+
+<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/similar">Similar Genes</a> (Warning - this may take a long time)</p>
+
+{% endfor %}
 
 <p><a href="/genes">Back to gene search</a></p>
 
