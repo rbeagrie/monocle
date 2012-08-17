@@ -106,7 +106,7 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
                     name = GeneName.objects.get(gene_name_set=ns,name=fields[field])
                     gene = name.gene
                     
-                except GeneName.DoesNotExist:
+                except (GeneName.DoesNotExist, GeneName.MultipleObjectsReturned):
                     name = GeneName(gene_name_set=ns,name=fields[field])
             
             else:
@@ -136,8 +136,10 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
 
             
         for name in names:
-            name_count += 1
             name.gene = gene
+            if GeneName.objects.filter(gene = name.gene, gene_name_set = name.gene_name_set, name = name.name).count():
+                continue
+            name_count += 1
             name.save()
         
         feature,created = Feature.objects.get_or_create(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0)
