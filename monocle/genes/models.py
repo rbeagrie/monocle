@@ -32,6 +32,9 @@ class GeneNameSet(models.Model):
     name = models.CharField(max_length=70)
     description = models.TextField()
     
+    def __unicode__(self):
+        return self.name
+    
 class GeneName(models.Model):
     gene = models.ForeignKey(Gene)
     gene_name_set = models.ForeignKey(GeneNameSet)

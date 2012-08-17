@@ -37,7 +37,7 @@ class Command(BaseCommand):
         import_cufflinks(args,**options)
 
 def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short_name=False,**kwargs):
-    print kwargs
+
     genes_file = open(genes_fpkms)
     first_line = genes_file.readline()
     headers = first_line.split()
@@ -49,6 +49,8 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
         new_sample = Sample(name=sample_name,dataset=dataset)
         new_sample.save()
         samples.append(new_sample)
+        
+    print 'Added %i Samples' % len(samples)
     
     whole_gene,created = FeatureType.objects.get_or_create(name='whole_gene')
     
@@ -82,8 +84,10 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
         
     add_nameset(tracking,0)
     
-    for nameset,field in new_namesets:
-        print nameset.name
+    print 'Added %i Gene Name Sets' % len(new_namesets)
+    
+    gene_count = 0
+    name_count = 0
     
     for line in genes_file:
         fields = line.split()
@@ -93,7 +97,7 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
         
         for ns,field in old_namesets:
             if fields[field] == '-':
-                print fields[0],ns.name
+
                 continue
             
             if not gene:
@@ -127,13 +131,12 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
                 
         if not gene:
             gene = Gene(locus=fields[6],length=0)
+            gene_count += 1
             gene.save()
-        
-        if len(names) == 0:
-            print 'test',fields[0]
+
             
         for name in names:
-            print name
+            name_count += 1
             name.gene = gene
             name.save()
         
@@ -145,14 +148,19 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
             value,low,high,status = fields[9+(i*4):13+(i*4)]
             FeatureData(feature=feature,sample=sample,value=value,low_confidence=low,high_confidence=high,status=status).save()
             
+    print 'Added %i Genes' % gene_count
+    print 'Added %i Gene Names' % name_count
+            
 def process_tests_file(tests_file,dataset,feature,test):
     feature_type,created = FeatureType.objects.get_or_create(name=feature)
     test_type,created = TestType.objects.get_or_create(name=test)
+    test_count = 0
     with open(tests_file) as tests:
         next(tests)
         for line in tests:
+            test_count += 1
             fields = line.split()
-            print fields[0],feature_type    
+   
             
             feature = Feature.from_tracking_id_and_type(fields[0],feature_type)
             sample1 = Sample.from_dataset_and_name(dataset,fields[4])
@@ -167,8 +175,10 @@ def process_tests_file(tests_file,dataset,feature,test):
                         q_value=fields[12]
                         ).save()
                         
+    print 'Added %i Tests (%s - %s)' % (test_count,feature_type.name,test_type.name)
+                        
 def process_feature_file(filename,dataset,feature):
-    
+    feature_count = 0
     feature_file = open(filename)
     first_line = feature_file.readline()
     headers = first_line.split()
@@ -183,6 +193,7 @@ def process_feature_file(filename,dataset,feature):
     
     for line in feature_file:
         fields = line.split()
+        feature_count += 1
         gene = Gene.from_tracking_id_and_dataset(fields[3],dataset)
         
         feature,created = Feature.objects.get_or_create(gene=gene,type=feature_type,name=fields[2],tracking_id=fields[0],locus=fields[6],length=0)
@@ -193,6 +204,8 @@ def process_feature_file(filename,dataset,feature):
             value,low,high,status = fields[9+(i*4):13+(i*4)]
             feature_data = FeatureData(feature=feature,sample=sample,value=float(value),low_confidence=low,high_confidence=high,status=status)
             feature_data.save()
+            
+    print 'Added %i %ss' % (feature_count,feature_type.name)
         
 def process_cufflinks_directory(cuffdir,**kwargs):
     
