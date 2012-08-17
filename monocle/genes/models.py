@@ -20,13 +20,13 @@ class Gene(models.Model):
 
     @staticmethod
     def from_name(name):
-        matching_names = GeneName.objects.filter(name__iexact=name)
+        matching_genes = Gene.objects.filter(genename__name__iexact=name).distinct()
         
         # If we didn't find any matching names, return a DoesNotExist error
-        if len(matching_names) == 0 :
+        if len(matching_genes) == 0 :
             raise Gene.DoesNotExist('The gene %s could not be found in the database.' % name)
         else:
-            return matching_names
+            return matching_genes
     
 class GeneNameSet(models.Model):
     name = models.CharField(max_length=70)
@@ -39,6 +39,16 @@ class GeneName(models.Model):
     gene = models.ForeignKey(Gene)
     gene_name_set = models.ForeignKey(GeneNameSet)
     name = models.CharField(max_length=70)
+
+    @staticmethod
+    def from_name(name):
+        matching_names = GeneName.objects.filter(name__iexact=name)
+        
+        # If we didn't find any matching names, return a DoesNotExist error
+        if len(matching_names) == 0 :
+            raise Gene.DoesNotExist('The gene %s could not be found in the database.' % name)
+        else:
+            return matching_names
     
 class Dataset(models.Model):
     name = models.CharField(max_length=70)

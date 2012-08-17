@@ -67,8 +67,8 @@ def similar(request, gene_id):
 def search(request):
     gene_id=request.GET['gene']
     try:
-        names = Gene.from_name(gene_id)
-    except Gene.DoesNotExist:
+        names = GeneName.from_name(gene_id)
+    except GeneName.DoesNotExist:
         return render_to_response('genes/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
                 
     if len(names) == 1:
@@ -140,26 +140,26 @@ def handle_list(request):
             temp_list.temp = False
         temp_list.save()
         not_found = []
+        found_multiple = []
         
         for gene_name in gene_names:
             try:
-                g = Gene.objects.get(gene_short_name__iexact=gene_name)
-                temp_list.genes.add(g)
+                matching_genes = Gene.from_name(gene_name)
+                if len(matching_genes) == 1:
+                    temp_list.genes.add(matching_genes[0])
+                else:
+                    found_multiple.append(gene_name)
+                    
             except Gene.DoesNotExist:
-                try:
-                    g = Gene.objects.get(gene_short_name__istartswith=gene_name+',')
-                    temp_list.genes.add(g)
-                except Gene.DoesNotExist:
-                    try:
-                        g = Gene.objects.get(gene_short_name__iendswith=','+gene_name)
-                        temp_list.genes.add(g)
-                    except Gene.DoesNotExist:
-                        not_found.append(gene_name)
+                not_found.append(gene_name)
+                
         temp_list.save()
         genes = temp_list.genes.all()
         if len(not_found):
             return render_to_response('genes/handle_list.html',{'gene_list':genes,
                                                                 'genes_matched':len(genes),
+                                                                'found_multiple':found_multiple,
+                                                                'multiple_matched':len(found_multiple),
                                                                 'not_found':not_found,
                                                                 'not_matched':len(not_found),
                                                                 'list_id':temp_list.pk},context_instance=RequestContext(request))

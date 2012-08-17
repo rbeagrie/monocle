@@ -17,7 +17,11 @@
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 
-<p>{% for gene in gene_list %} {{ gene.gene_short_name }}, {% endfor %}</p>
+<p>{% for gene in gene_list %} {{ gene }}, {% endfor %}</p>
+
+<h2>{{ multiple_matched }} genes matched multiple gnes:</h2>
+
+<p>{% for gene_name in found_multiple %} {{ gene_name }}, {% endfor %}</p>
 
 <h2>{{ not_matched }} genes could not be found:</h2>
 
