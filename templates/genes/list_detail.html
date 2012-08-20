@@ -14,15 +14,11 @@
 
 <h1>Overview for Gene List # {{ list.pk }} - {{ list.name }}</h1>
 
-{% if heat %}
+{% for dataset in datasets %}
 
-<p><img src="/genes/lists/{{ list.pk }}/heat.png" /></p>
+<p><p><img src="/genes/lists/{{ list.pk }}/dataset/{{ dataset.pk }}/graph.png" /></p></p>
 
-{% else %}
-
-<p><img src="/genes/lists/{{ list.pk }}/graph.png" /></p>
-
-{% endif %}
+{% endfor %}
 
 <p><a href="/genes/lists">Back to gene lists</a></p>
 

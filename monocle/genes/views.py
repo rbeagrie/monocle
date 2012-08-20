@@ -14,7 +14,7 @@ import datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
-import matplotlib
+import matplotlib, pylab
 
 @login_required
 def index(request):
@@ -173,24 +173,30 @@ def list_detail(request, list_id):
     
     l = get_object_or_404(GeneList, pk=list_id)
     print l.genes.count()
+    
+    datasets = Dataset.objects.filter(sample__featuredata__feature__gene__genelist=l).distinct()
+    
     if l.genes.count() > 10:
         heat = True
     else:
         heat = False
     
-    return render_to_response('genes/list_detail.html',{'list':l,'heat':heat},context_instance=RequestContext(request))
+    return render_to_response('genes/list_detail.html',{'list':l,'datasets':datasets},context_instance=RequestContext(request))
 
-def list_graph(request, list_id):
+def list_graph(request, list_id, dataset_id):
 
-    l = get_object_or_404(GeneList, pk=list_id)
-    genes = l.genes.all()
+    list = get_object_or_404(GeneList, pk=list_id)
+    dataset = get_object_or_404(Dataset, pk=dataset_id)
+    samples = Sample.objects.filter(dataset=dataset)
     
-    graph = expression_line()
+    graph = genelist_boxplot()
     
-    for gene in genes:
-        graph.add_gene(gene)
+    for sample in samples:
+        FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='whole_gene',feature__gene__genelist=list))
+        print FPKMS
+        graph.add_sample(sample.name,FPKMS)
         
-    graph.ax.set_title('List #%i - %s' % (l.pk,l.name))
+    graph.ax.set_title('List #%i - %s' % (list.pk,list.name))
     
     return graph.response()
     
@@ -384,3 +390,41 @@ class expression_heat():
         response=django.http.HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+        
+class genelist_boxplot():
+    
+    def __init__(self,height=19):
+        matplotlib.rc('axes',edgecolor='white')
+
+        self.fig=Figure(figsize=(13,((6.0/19)*height)+1))
+        self.fig.set_facecolor('white')
+        self.ax=self.fig.add_subplot(111)
+        self.ax.set_axis_bgcolor('#EEEEEE')
+        self.ax.tick_params(axis='both', direction='out')
+        self.ax.get_xaxis().tick_bottom()   # remove unneeded ticks 
+        self.ax.get_yaxis().tick_left()
+        self.x_labels = []
+        self.list_data = []
+        
+        box = self.ax.get_position()
+        self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+        
+    def add_sample(self,name,fpkms):
+        self.list_data.append(fpkms)
+        self.x_labels.append(name)
+        
+    def response(self,errors=False):
+        bp = self.ax.boxplot(self.list_data,
+        widths = 0.8,patch_artist=True,sym='wo')
+        pylab.setp(bp['boxes'],facecolor='#D9D9D9')
+        pylab.setp(bp['whiskers'],color='gray')
+        
+        self.ax.set_xticks(range(1,len(self.x_labels)+1))
+        self.ax.set_xticklabels(self.x_labels)
+        
+        canvas=FigureCanvas(self.fig)
+        response=django.http.HttpResponse(content_type='image/png')
+        canvas.print_png(response)
+        return response
+        
+    
