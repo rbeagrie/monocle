@@ -112,9 +112,5 @@ class TestResult(models.Model):
     status = models.CharField(max_length=45)
     p_value = models.FloatField()
     q_value = models.FloatField()
-				
-class GeneList(models.Model):
-	name = models.CharField(max_length=45)
-	temp = models.BooleanField(default=True)
-	genes = models.ManyToManyField(Gene)
+
     

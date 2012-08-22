@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from django.core.management.base import BaseCommand
-from genes.models import *
+from gene.models import *
 import os
 from optparse import make_option
 

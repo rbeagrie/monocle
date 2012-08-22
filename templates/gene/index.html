@@ -9,7 +9,7 @@
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form action="/genes/search/" method="get">
+<form action="/gene/search/" method="get">
 {% csrf_token %}
 <input type="text" name="gene" />
 <input type="submit" value="Search" />

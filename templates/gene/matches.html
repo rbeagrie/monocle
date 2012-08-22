@@ -27,8 +27,8 @@
 {% for name in names %}
 
 <tr>
-<td><a href="http://{{ host }}/genes/{{ name.gene.pk }}">{{ name.name }}</td>
-<td><a href="http://{{ host }}/genes/{{ name.gene.pk }}">{{ name.gene_name_set.name }}</td>
+<td><a href="http://{{ host }}/gene/{{ name.gene.pk }}">{{ name.name }}</td>
+<td><a href="http://{{ host }}/gene/{{ name.gene.pk }}">{{ name.gene_name_set.name }}</td>
 </tr>
 
 {% endfor %}
