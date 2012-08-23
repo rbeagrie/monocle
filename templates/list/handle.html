@@ -25,8 +25,8 @@
 
 <h2>{{ not_matched }} genes could not be found:</h2>
 
-<p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}</p>
+<p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}</p> hello - {{ list }}
 
-<p><a href="{% url list.views.detail list.pk %}">Continue to Gene List</a></p>
+<p><a href="{% url list.views.detail 1 %}">Continue to Gene List</a></p>
 
 {% endblock %}

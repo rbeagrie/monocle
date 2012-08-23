@@ -47,13 +47,14 @@ def handle(request):
         temp_list.save()
         genes = temp_list.genes.all()
         if len(not_found):
+            print 'hello',temp_list
             return render_to_response('list/handle.html',{'gene_list':genes,
                                                                 'genes_matched':len(genes),
                                                                 'found_multiple':found_multiple,
                                                                 'multiple_matched':len(found_multiple),
                                                                 'not_found':not_found,
                                                                 'not_matched':len(not_found),
-                                                                'list_id':temp_list.pk},context_instance=RequestContext(request))
+                                                                'list':temp_list},context_instance=RequestContext(request))
         else:
             return redirect(temp_list)
     else:
