@@ -151,16 +151,21 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
             name_count += 1
             name.save()
         
-        feature,created = Feature.objects.get_or_create(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0)
-        feature.save()
-        
+        try:
+            Feature.objects.get(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0)
+        except:
+            unsaved_features.append(Feature(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0))
+
+        unsaved_data[fields[0]] = []
         for i,sample in enumerate(samples):
             
             value,low,high,status = fields[9+(i*4):13+(i*4)]
-            FeatureData(feature=feature,sample=sample,value=value,low_confidence=low,high_confidence=high,status=status).save()
+            unsaved_data[fields[0]].append(FeatureData(sample=sample,value=value,low_confidence=low,high_confidence=high,status=status))
         
-        logger.debug('Added Gene %i: %s' % (gene_count,feature.name))
+        #logger.debug('Added Gene %i: %s' % (gene_count,feature.name))
         if gene_count % 1000 == 0:
+            Feature.objects.bulk_create(unsaved_features)
+            unsaved_features = []
             total_time = time.clock() - start_time
             logger.info('Added %i genes in %f seconds.' % (gene_count,total_time))
     print 'Added %i Genes' % gene_count
