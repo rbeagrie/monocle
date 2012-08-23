@@ -13,12 +13,12 @@ import django
 @login_required
 def index(request):
     l = GeneList.objects.filter(temp=False)
-    return render_to_response('genes/lists.html',{'lists':l},context_instance=RequestContext(request))
+    return render_to_response('list/index.html',{'lists':l},context_instance=RequestContext(request))
     
 @login_required    
 def upload(request):
 
-    return render_to_response('genes/upload.html',{},context_instance=RequestContext(request))
+    return render_to_response('list/upload.html',{},context_instance=RequestContext(request))
     
 @login_required
 def handle(request):
@@ -47,7 +47,7 @@ def handle(request):
         temp_list.save()
         genes = temp_list.genes.all()
         if len(not_found):
-            return render_to_response('genes/handle_list.html',{'gene_list':genes,
+            return render_to_response('list/handle.html',{'gene_list':genes,
                                                                 'genes_matched':len(genes),
                                                                 'found_multiple':found_multiple,
                                                                 'multiple_matched':len(found_multiple),
@@ -55,9 +55,9 @@ def handle(request):
                                                                 'not_matched':len(not_found),
                                                                 'list_id':temp_list.pk},context_instance=RequestContext(request))
         else:
-            return redirect('http://'+request.META['HTTP_HOST']+'/genes/lists/'+str(temp_list.pk))
+            return redirect(temp_list)
     else:
-        return redirect('http://'+request.META['HTTP_HOST']+'/genes/upload/')
+        return redirect(list.views.upload)
         
 @login_required    
 def detail(request, list_id):
@@ -72,4 +72,4 @@ def detail(request, list_id):
     else:
         heat = False
     
-    return render_to_response('genes/list_detail.html',{'list':l,'datasets':datasets},context_instance=RequestContext(request))
+    return render_to_response('list/detail.html',{'list':l,'datasets':datasets},context_instance=RequestContext(request))

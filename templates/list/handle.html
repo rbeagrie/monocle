@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<strong>Genes</strong>{% endblock %}
+{% block breadcrumb %}<a href="{% url list.views.index %}">Gene Lists</a> / <strong>Upload Gene List</strong>{% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
-		<li><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
-		<li class="active"><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
-		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
+		<li><a href="{% url list.views.index %}">View Gene Lists</a></li>
+		<li class="active"><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 
 {% block content %}
@@ -27,6 +27,6 @@
 
 <p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}</p>
 
-<p><a href="http://{{ host }}/genes/lists/{{ list_id }}">Continue to Gene List</a></p>
+<p><a href="{% url list.views.detail list.pk %}">Continue to Gene List</a></p>
 
 {% endblock %}

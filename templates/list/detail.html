@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / {% endblock %}
+{% block breadcrumb %}<a href="{% url list.views.index %}">Gene Lists</a> / <strong>{{ list }}</strong> {% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
-		<li class="active"><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
-		<li><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
-		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
+		<li class="active"><a href="{% url list.views.index %}">View Gene Lists</a></li>
+		<li><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 
 {% block content %}
@@ -15,11 +15,11 @@
 <h1>Overview for Gene List # {{ list.pk }} - {{ list.name }}</h1>
 
 {% for dataset in datasets %}
-
-<p><p><img src="/genes/lists/{{ list.pk }}/dataset/{{ dataset.pk }}/graph.png" /></p></p>
+<h2>{{ dataset }}</h2>
+<p><img src="{% url graph.views.list list.pk dataset.pk %}" /></p>
 
 {% endfor %}
 
-<p><a href="/genes/lists">Back to gene lists</a></p>
+<p><a href="{% url list.views.index %}">Back to gene lists</a></p>
 
 {% endblock %}

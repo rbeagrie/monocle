@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<strong>Genes</strong>{% endblock %}
+{% block breadcrumb %}<a href="{% url list.views.index %}">Gene Lists</a> | <strong>Upload New List</strong>{% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
-		<li><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
-		<li class="active"><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
-		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
+		<li><a href="{% url list.views.index %}">View Gene Lists</a></li>
+		<li class="active"><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form action="/genes/handle_list/" method="post" enctype="multipart/form-data">
+<form action="/list/handle/" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 
 <table>

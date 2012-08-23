@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <a href="http://{{ host }}/genes/{{ gene.gene_short_name }}">{{ gene.gene_short_name }}</a> / <strong> Similar Genes </strong>{% endblock %}
+{% block breadcrumb %}<a href="{% url gene.views.index %}">Genes</a> / <strong> Search Matches </strong>{% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="http://{{ host }}/genes/">Search Genes</a></li>
-		<li class="active"><a href="http://{{ host }}/genes/lists">View Gene Lists</a></li>
-		<li><a href="http://{{ host }}/genes/upload">Upload Gene List</a></li>
-		<li><a href="http://{{ host }}/genes/logout">Logout</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
+		<li class="active"><a href="{% url list.views.index %}">View Gene Lists</a></li>
+		<li><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 
 {% block content %}
@@ -27,8 +27,8 @@
 {% for name in names %}
 
 <tr>
-<td><a href="http://{{ host }}/gene/{{ name.gene.pk }}">{{ name.name }}</td>
-<td><a href="http://{{ host }}/gene/{{ name.gene.pk }}">{{ name.gene_name_set.name }}</td>
+<td><a href="{% url gene.views.detail name.gene.pk %}">{{ name.name }}</td>
+<td><a href="{% url gene.views.detail name.gene.pk %}">{{ name.gene_name_set.name }}</td>
 </tr>
 
 {% endfor %}

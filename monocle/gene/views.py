@@ -40,8 +40,14 @@ def tss(request, gene_id, dataset_id):
     gene = get_object_or_404(Gene, pk=gene_id)
     dataset = get_object_or_404(Dataset, pk=dataset_id)
     tss_groups = get_list_or_404(Feature,gene=gene,type__name='tss_group',featuredata__sample__dataset=dataset)
-        
-    return render_to_response('gene/tss.html', {'gene' : gene},context_instance=RequestContext(request) )
+    tss_groups = list(set(tss_groups))
+    tss_list = []
+    for tss in tss_groups:
+        info = {}
+        info['name'] = tss.name
+        info['isoforms'] = tss.children('tss_link_isoform')
+        tss_list.append(info)
+    return render_to_response('gene/tss.html', {'gene' : gene, 'dataset' : dataset, 'tss_groups' : tss_list},context_instance=RequestContext(request) )
 
 @login_required
 def isoforms(request, gene_id, dataset_id):
@@ -52,9 +58,10 @@ def isoforms(request, gene_id, dataset_id):
     return render_to_response('gene/isoforms.html', {'gene' : gene, 'dataset' : dataset, 'isoforms' : isoforms} ,context_instance=RequestContext(request))
     
 @login_required
-def similar(request, gene_id):
-    g = get_object_or_404(Gene, gene_short_name=gene_id)
-    similar = g.get_similar()
+def similar(request, gene_id, dataset_id):
+    g = get_object_or_404(Gene, pk=gene_id)
+    d = get_object_or_404(Dataset, pk=dataset_id)
+    similar = g.get_similar(d)
     return render_to_response('gene/similar.html', {'gene' : g, 'similar': similar[1:11]} ,context_instance=RequestContext(request))
 
 @login_required
@@ -67,7 +74,7 @@ def search(request):
                 
     if len(names) == 1:
         gene = names[0].gene
-        return redirect('http://'+request.META['HTTP_HOST']+'/genes/%i/' % gene.id)
+        return redirect(gene)
     
     else:
         return render_to_response('gene/matches.html',{'names':names} ,context_instance=RequestContext(request))

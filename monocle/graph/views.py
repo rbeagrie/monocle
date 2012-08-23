@@ -7,6 +7,7 @@ from django.template import RequestContext
 from django.core.files.temp import TemporaryFile
 from gene.models import *
 from list.models import *
+from  graphs import *
 import numpy
 import django
 

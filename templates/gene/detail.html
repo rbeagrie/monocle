@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <strong>{{ gene.gene_short_name }}</strong>{% endblock %}
+{% block breadcrumb %}<a href="{% url gene.views.index %}">Genes</a> / <strong>{{ gene }}</strong>{% endblock %}
 
 {% block content %}
 
-<h1>Overview for {{ gene }} - {{ gene.locus }}</h1>
+<h1>Overview for Gene {{ gene }} - {{ gene.locus }}</h1>
 
 {% for dataset in datasets %}
 
 <h2>{{ dataset.name }}</h2>
 
-<p><img src="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/graph.png" /></p>
+<p><img src="{% url graph.views.gene gene.pk dataset.pk %}" /></p>
 
 {% if dataset.tss %}
 
-<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/tss">Tss usage</a></p>
+<p><a href="{% url gene.views.tss gene.pk dataset.pk %}">Tss usage</a></p>
 
 {% endif %}
 
 {% if dataset.isoform %}
 
-<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/isoforms">Isoform Expression</a></p>
+<p><a href="{% url gene.views.isoforms gene.pk dataset.pk %}">Isoform Expression</a></p>
 
 {% endif %}
 
-<p><a href="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/similar">Similar Genes</a> (Warning - this may take a long time)</p>
+<p><a href="{% url gene.views.similar gene.pk dataset.pk %}">Similar Genes</a> (Warning - this may take a long time)</p>
 
 {% endfor %}
 
-<p><a href="/genes">Back to gene search</a></p>
+<p><a href="{% url gene.views.index %}">Back to gene search</a></p>
 
 {% endblock %}

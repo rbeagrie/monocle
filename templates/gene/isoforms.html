@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
-{% block breadcrumb %}<a href="http://{{ host }}/genes/">Genes</a> / <a href="http://{{ host }}/genes/{{ gene.gene_short_name }}">{{ gene.gene_short_name }}</a> / <strong>Isoforms</strong>{% endblock %}
+{% block breadcrumb %}<a href="{% url gene.views.index %}">Genes</a> / <a href="{% url gene.views.detail gene.pk %}">{{ gene }}</a> / <strong>Isoforms</strong>{% endblock %}
 
 {% block content %}
 
 <h1>Isoform expression for {{ gene.gene_short_name }} - {{ gene.locus }}</h1>
 
-<p><img src="/genes/{{ gene.pk }}/dataset/{{ dataset.pk }}/isoforms/graph.png" /></p>
+<p><img src="{% url graph.views.isoform gene.pk dataset.pk %}" /></p>
 
 <h2>{{ gene.gene_short_name }} Isoforms</h2>
 
 {% for isoform in isoforms %}
 
-<p><a href="http://www.ensembl.org/Mus_musculus/Search/Details?species=Mus_musculus;idx=Transcript;end=1;q={{ isoform.nearest_ref_id }}">{{ isoform }}</a></p>
+<p><a href="http://www.ensembl.org/Mus_musculus/Search/Details?species=Mus_musculus;idx=Transcript;end=1;q={{ isoform.name }}">{{ isoform.name }}</a></p>
 
 {% endfor %}
 
-<p><a href="/genes/{{ gene.gene_short_name }}">Back to gene {{ gene.gene_short_name }}</a></p>
+<p><a href="{% url gene.views.detail gene.pk %}">Back to gene {{ gene }}</a></p>
 
-<p><a href="/genes">Back to gene search</a></p>
+<p><a href="{% url gene.views.index %}">Back to gene search</a></p>
 
 {% endblock %}

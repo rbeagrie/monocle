@@ -1,3 +1,5 @@
+from gene.models import *
+from list.models import *
 
 import django
 
@@ -77,9 +79,8 @@ class expression_line():
         features = Feature.objects.filter(gene=gene,type=feature_type)
         for feature in features:
             gene_data = FeatureData.objects.filter(feature=feature,sample__dataset=self.dataset)
-            print 'data',gene_data
             line = self.add_data(gene_data)
-            self.legend_entries[feature.name] = line
+            self.legend_entries[feature.tracking_id] = line
         
     def add_isoforms(self,gene):
         

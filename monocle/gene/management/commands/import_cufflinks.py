@@ -192,14 +192,22 @@ def process_feature_file(filename,dataset,feature):
         samples.append(Sample.from_dataset_and_name(dataset,sample_name))
     
     feature_type,created = FeatureType.objects.get_or_create(name=feature)
+    tss_type = FeatureType.objects.get(name='tss_group')
     
     for line in feature_file:
         fields = line.split()
         feature_count += 1
         gene = Gene.from_tracking_id_and_dataset(fields[3],dataset)
         
-        feature,created = Feature.objects.get_or_create(gene=gene,type=feature_type,name=fields[2],tracking_id=fields[0],locus=fields[6],length=0)
+        feature,created = Feature.objects.get_or_create(gene=gene,type=feature_type,name=fields[0],tracking_id=fields[0],locus=fields[6],length=0)
         feature.save()
+        
+        if feature_type.name != 'tss_group' and fields[5] != '-':
+            tss_id = fields[5]
+            tss_group = Feature.from_tracking_id_and_type(tss_id,tss_type)
+            tss_link = FeatureLink(feature1=feature,feature2=tss_group,name='tss_link_%s'%feature_type.name)
+            print tss_link
+            tss_link.save()
               
         for i,sample in enumerate(samples):
             
@@ -224,18 +232,6 @@ def process_cufflinks_directory(cuffdir,**kwargs):
     
     process_tests_file(genes_tests_file,dataset,'whole_gene','expression_t_test')
     
-    # Process the isoforms.fpkm_tracking file
-    isoforms_file = os.path.join(cuffdir,'isoforms.fpkm_tracking')
-    assert os.path.exists(isoforms_file)
-    
-    process_feature_file(isoforms_file,dataset,'isoform')
-    
-    # Process the isoform_exp.diff file
-    isoform_tests_file = os.path.join(cuffdir,'isoform_exp.diff')
-    assert os.path.exists(isoform_tests_file)
-    
-    process_tests_file(isoform_tests_file,dataset,'isoform','expression_t_test')
-    
     # Process the tss_groups.fpkm_tracking file
     TSS_file = os.path.join(cuffdir,'tss_groups.fpkm_tracking')
     assert os.path.exists(TSS_file)
@@ -247,6 +243,18 @@ def process_cufflinks_directory(cuffdir,**kwargs):
     assert os.path.exists(TSS_tests_file)
     
     process_tests_file(TSS_tests_file,dataset,'tss_group','expression_t_test')
+    
+    # Process the isoforms.fpkm_tracking file
+    isoforms_file = os.path.join(cuffdir,'isoforms.fpkm_tracking')
+    assert os.path.exists(isoforms_file)
+    
+    process_feature_file(isoforms_file,dataset,'isoform')
+    
+    # Process the isoform_exp.diff file
+    isoform_tests_file = os.path.join(cuffdir,'isoform_exp.diff')
+    assert os.path.exists(isoform_tests_file)
+    
+    process_tests_file(isoform_tests_file,dataset,'isoform','expression_t_test')
 
 def import_cufflinks(argset=[], **kwargs):
     cuffdir = argset[0]
