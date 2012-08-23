@@ -2,8 +2,14 @@
 
 from django.core.management.base import BaseCommand
 from gene.models import *
-import os
+import os, time
 from optparse import make_option
+
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     args = "[cuffdiff_directory]"
@@ -89,6 +95,9 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
     gene_count = 0
     name_count = 0
     
+    start_time = time.clock()
+    unsaved_features = []
+    unsaved_data = {}
     for line in genes_file:
         fields = line.split()
         
@@ -149,7 +158,11 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
             
             value,low,high,status = fields[9+(i*4):13+(i*4)]
             FeatureData(feature=feature,sample=sample,value=value,low_confidence=low,high_confidence=high,status=status).save()
-            
+        
+        logger.debug('Added Gene %i: %s' % (gene_count,feature.name))
+        if gene_count % 1000 == 0:
+            total_time = time.clock() - start_time
+            logger.info('Added %i genes in %f seconds.' % (gene_count,total_time))
     print 'Added %i Genes' % gene_count
     print 'Added %i Gene Names' % name_count
             
