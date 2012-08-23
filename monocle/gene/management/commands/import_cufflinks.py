@@ -206,7 +206,6 @@ def process_feature_file(filename,dataset,feature):
             tss_id = fields[5]
             tss_group = Feature.from_tracking_id_and_type(tss_id,tss_type)
             tss_link = FeatureLink(feature1=feature,feature2=tss_group,name='tss_link_%s'%feature_type.name)
-            print tss_link
             tss_link.save()
               
         for i,sample in enumerate(samples):
