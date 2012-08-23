@@ -9,7 +9,7 @@ import logging, sys, os, signal, time, errno, webbrowser
 from socket import gethostname
 from optparse import make_option
 from django.core.management.base import BaseCommand
-
+from monocle import settings
 
 CPSERVER_HELP = r"""
   Run this project in a CherryPy webserver. To do this, CherryPy from
@@ -165,11 +165,19 @@ def start_server(options):
         #ensure the that the daemon runs as specified user
         change_uid_gid(options['server_user'], options['server_group'])
     
-    from wsgiserver2 import CherryPyWSGIServer as Server
+    from wsgiserver2 import CherryPyWSGIServer as Server, WSGIPathInfoDispatcher
     from django.core.handlers.wsgi import WSGIHandler
+    import mediahandler
+    
+    # Serve static files as well
+    app = WSGIHandler()
+    path = { '/': app}
+    path[settings.STATIC_URL] = mediahandler.MediaHandler(settings.STATIC_ROOT)
+    dispatcher =  WSGIPathInfoDispatcher( path )
+    
     server = Server(
         (options['host'], int(options['port'])),
-        WSGIHandler(), 
+        dispatcher, 
         int(options['threads']), 
         options['server_name']
     )
@@ -218,7 +226,7 @@ def runcpserver(argset=[], **kwargs):
     
     # Start the webserver
     print 'starting server with options %s' % options
-    webbrowser.open('http://localhost:9000/genes')
+    webbrowser.open('http://localhost:9000/')
     start_server(options)
 
 
