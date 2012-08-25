@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from gene.models import *
 import os, time
 from optparse import make_option
+from django.db.models import Q
 
 # import the logging library
 import logging
@@ -97,7 +98,7 @@ class CuffDiffImporter(object):
 
 class FeatureImporter(object):
     
-    def __init__(self,feature_name,cuffdiff_directory,dataset,gene_index,sample_index=False,tss_index=False,**options):
+    def __init__(self,feature_name,cuffdiff_directory,dataset,gene_index,sample_index=False,tss_index=False,skip_feature=False,**options):
         
         self.cuffdiff_directory = cuffdiff_directory
         self.options = options
@@ -106,6 +107,7 @@ class FeatureImporter(object):
         self.gene_index = gene_index
         self.sample_index = sample_index
         self.tss_index = tss_index
+        self.skip_feature = skip_feature
         
         # Get the files for this feature
         self.get_files()
@@ -177,15 +179,17 @@ class FeatureImporter(object):
         
         tracking_id = fields[0]
         gene_id = fields[3].split(',')[0]
-        gene = self.gene_index.get(gene_id)
+        gene,old = self.gene_index.get(gene_id)
         
         if not tracking_id in self.feature_index:
-            self.feature_buffer.add(Feature(gene=gene,
-                                            type=self.feature_type,
-                                            name=tracking_id,
-                                            tracking_id=tracking_id,
-                                            locus=fields[6],
-                                            length=0))
+            if not (self.skip_feature and old):
+                
+                self.feature_buffer.add(Feature(gene=gene,
+                                                type=self.feature_type,
+                                                name=tracking_id,
+                                                tracking_id=tracking_id,
+                                                locus=fields[6],
+                                                length=0))
                                             
         if self.tss_index and fields[5] != '-':
             tss_ids = fields[5].split(',')
@@ -268,7 +272,7 @@ class GeneImporter(FeatureImporter):
         self.name_count = 0
     
         # Initiate the parent class with 'gene' as the feature type
-        FeatureImporter.__init__(self,'gene',cuffdiff_directory,dataset,GeneIndex(),**options)
+        FeatureImporter.__init__(self,'gene',cuffdiff_directory,dataset,GeneIndex(),skip_feature=True,**options)
         
     def process_headers(self,headers):
         # Get sample names from the column headers
@@ -296,18 +300,10 @@ class GeneImporter(FeatureImporter):
         fields = line.split()
                 
         # Parse and add gene names
-        gene = self.ns_parser.parse(fields)
-        
-        # Make a new gene if none was found
-        if not gene:
-            gene = Gene(locus=fields[6],length=0)
-            gene.save()
-            self.gene_count += 1
+        gene,old = self.ns_parser.parse(fields)
         
         # Add the gene to the index
-        self.gene_index.add(gene,fields[0])
-        
-        self.ns_parser.add_gene(gene)
+        self.gene_index.add(gene,fields[0],old)
         
         FeatureImporter.process_feature_line(self,line)
         
@@ -323,7 +319,6 @@ class GeneImporter(FeatureImporter):
         
     def output(self):
         lines = 'Added %i Samples\n' % self.sample_count
-        lines += 'Added %i Genes\n' % self.gene_count
         lines += 'Added %i Names\n' % self.name_count
         lines += FeatureImporter.output(self)
         return lines
@@ -357,9 +352,9 @@ class GeneIndex(object):
         self.genes = {}
         self.gene_ids = {}
         
-    def add(self,gene,tracking_id):
+    def add(self,gene,tracking_id,old):
     
-        self.genes[tracking_id] = gene
+        self.genes[tracking_id] = gene,old
         self.gene_ids[gene.pk] = tracking_id
         
     def get_ids(self):
@@ -373,6 +368,35 @@ class GeneIndex(object):
     def get(self,tracking_id):
         
         return self.genes[tracking_id]
+    
+class GeneNameIndex(object):
+    def __init__(self,nameset,field):
+        
+        self.index = {}
+        self.field = field
+        self.nameset = nameset
+        names = GeneName.objects.select_related().filter(gene_name_set=nameset)
+        for name in names:
+            self.index[name.name] = name.gene
+            
+    def get_name(self,fields):
+        
+        name = fields[self.field]
+        if name != '-':
+            return name
+        else:
+            return False
+        
+    def parse(self,fields):
+        
+        name = self.get_name(fields)
+        if name:
+            try:
+                return self.index[name]
+            except KeyError:
+                return False
+        else:
+            return False
         
 class NameSetParser(object):
 
@@ -382,6 +406,10 @@ class NameSetParser(object):
         self.new_namesets = []
         
         self.incomplete_names = []
+        
+        self.start_time = time.clock()
+        
+        self.gene_count = 0
         
         self.name_buffer = Buffer(GeneName)
             
@@ -412,7 +440,8 @@ class NameSetParser(object):
         if created:
             self.new_namesets.append( (ns,field) )
         else:
-            self.old_namesets.append( (ns,field) )
+            index = GeneNameIndex(ns,field)
+            self.old_namesets.append( index )
             
     def add_gene(self,gene):
         
@@ -423,14 +452,43 @@ class NameSetParser(object):
         self.incomplete_names = []
         
     def parse(self,fields):
-          
+        
+        old_names = []
+        query_chain = Q()
+        gene = False
+        old = True
+        
+        for index in self.old_namesets:
+            gene = index.parse(fields)
+            if gene:
+                #logger.info( 'Found gene %s' % gene)
+                break
+            
+        if not gene:
+            for index in self.old_namesets:
+                name = index.get_name(fields)
+                ns = index.nameset
+                self.incomplete_names.append(GeneName(gene_name_set=ns,name=name))
+                      
         for ns,field in self.new_namesets:
             if fields[field] == '-':
                 continue
                 
             self.incomplete_names.append(GeneName(gene_name_set=ns,name=fields[field]))
+        
+        # Make a new gene if none was found
+        if not gene:
+            gene = Gene(locus=fields[6],length=0)
+            gene.save()
+            old = False
             
-        return False
+        self.gene_count += 1
+        if self.gene_count % 2000 == 0:
+            logger.info('%i genes in %f seconds' % (self.gene_count,time.clock() - self.start_time))
+            
+        self.add_gene(gene)
+        
+        return gene,old
             
     def save(self):
         
@@ -517,7 +575,7 @@ def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short
         gene = False
         current_names = []
         
-        for ns,field in old_namesets:
+        for ns,field in self.old_namesets:
             if fields[field] == '-':
 
                 continue
