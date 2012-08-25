@@ -498,6 +498,7 @@ class Buffer(object):
     def __init__(self,model_class):
         
         self.model = model_class
+        self.batch_size = 900 / len(model_class._meta.fields)
         self.objects = []
         self.start_time = time.clock()
         
@@ -506,8 +507,15 @@ class Buffer(object):
         self.objects.append(object)
         
     def process(self):
-        
-        self.model.objects.bulk_create(self.objects,batch_size=500)
+        unprocessed = []
+        for obj in self.objects:
+            unprocessed.append(obj)
+            if len(unprocessed) % self.batch_size == 0:
+                self.model.objects.bulk_create(unprocessed)
+                unprocessed = []
+                
+        self.model.objects.bulk_create(unprocessed)
+                
         logger.info('Added %i %ss in %f seconds.' % (len(self.objects),self.model.__name__,time.clock()-self.start_time))
         del self.objects
             

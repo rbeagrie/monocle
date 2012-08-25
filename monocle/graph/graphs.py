@@ -44,7 +44,7 @@ class expression_line():
         
     def add_gene(self,gene):
         
-        feature_type = FeatureType.objects.get(name='whole_gene')
+        feature_type = FeatureType.objects.get(name='gene')
         feature = Feature.objects.get(gene=gene,type=feature_type)
         gene_data = FeatureData.objects.filter(feature=feature,sample__dataset=self.dataset)
         
