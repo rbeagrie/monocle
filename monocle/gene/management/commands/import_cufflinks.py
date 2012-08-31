@@ -31,6 +31,11 @@ class Command(BaseCommand):
             dest='short_name',
             default=False,
             help='Source of CuffDiff short_name identifiers.'),
+        
+        make_option('-t','--tracking_id',
+            dest='tracking',
+            default=False,
+            help='Source of CuffDiff tracking_id identifiers.'),
         )
 
     def handle(self, *args, **options):
@@ -69,7 +74,6 @@ class CuffDiffImporter(object):
         self.dataset = Dataset()
         self.dataset.save()
         start_time = time.clock()
-        print start_time
         print 'Starting Data Import'
         
         # Get the namesets
@@ -92,7 +96,6 @@ class CuffDiffImporter(object):
             print feature_importer.output()
             del feature_importer
         
-        print start_time,time.clock()
         logger.info('Whole import took %f seconds' % time.clock())
         print 'Finished importing data!'
 
@@ -194,7 +197,12 @@ class FeatureImporter(object):
         if self.tss_index and fields[5] != '-':
             tss_ids = fields[5].split(',')
             for tss_id in tss_ids:
-                tss_group = self.tss_index.get(tss_id)
+                try:
+                    tss_group = self.tss_index.get(tss_id)
+                except KeyError:
+                    logger.warning('Could not find TSS with ID: \'%s\'' % tss_id)
+                    continue
+                    
                 self.tss_buffer.add(tracking_id,FeatureLink(feature2=tss_group,name='tss_link_%s'%self.feature_name))
         
         for i,sample in enumerate(self.samples):
@@ -319,7 +327,8 @@ class GeneImporter(FeatureImporter):
         
     def output(self):
         lines = 'Added %i Samples\n' % self.sample_count
-        lines += 'Added %i Names\n' % self.name_count
+        lines += 'Added %i Name Sets\n' % self.ns_parser.nameset_count
+        lines += 'Added %i Names\n' % self.ns_parser.name_count
         lines += FeatureImporter.output(self)
         return lines
         
@@ -400,16 +409,19 @@ class GeneNameIndex(object):
         
 class NameSetParser(object):
 
-    def __init__(self,dataset,short_name=False,cuff_id=False,nearest_ref=False,**options):
+    def __init__(self,dataset,short_name=False,cuff_id=False,nearest_ref=False,tracking=False,**options):
     
         self.old_namesets = []
         self.new_namesets = []
         
         self.incomplete_names = []
         
-        self.start_time = time.clock()
-        
         self.gene_count = 0
+        self.name_count = 0
+        
+        self.all_namesets = set()
+        
+        self.start_time = time.clock()
         
         self.name_buffer = Buffer(GeneName)
             
@@ -421,19 +433,25 @@ class NameSetParser(object):
         if not cuff_id:
             cuff_id = 'Cufflinks Gene ID, dataset %i' % dataset.pk
             
-        self.add_nameset(cuff_id, 3)
+        if cuff_id not in self.all_namesets:    
+            self.add_nameset(cuff_id, 3)
+        
+        if not tracking:        
+            tracking = 'Cufflinks Tracking ID, dataset %i' % dataset.pk
+            
+        if tracking not in self.all_namesets:    
+            self.add_nameset(tracking,0)
         
         if not nearest_ref:
             nearest_ref = 'Cufflinks nearest_ref, dataset %i' % dataset.pk
-        self.add_nameset(nearest_ref,2)
             
-        tracking = 'Cufflinks Tracking ID, dataset %i' % dataset.pk
+        if nearest_ref not in self.all_namesets:    
+            self.add_nameset(nearest_ref,2)
             
-        self.add_nameset(tracking,0)
-        
-        print 'Added %i Gene Name Sets' % len(self.new_namesets)
+        self.nameset_count = len(self.new_namesets)
             
     def add_nameset(self,name,field):
+        self.all_namesets.add(name)
         ns,created = GeneNameSet.objects.get_or_create(name=name)
         ns.save()
     
@@ -448,6 +466,7 @@ class NameSetParser(object):
         for new_name in self.incomplete_names:
             new_name.gene = gene
             self.name_buffer.add(new_name)
+            self.name_count += 1
             
         self.incomplete_names = []
         
@@ -461,7 +480,6 @@ class NameSetParser(object):
         for index in self.old_namesets:
             gene = index.parse(fields)
             if gene:
-                #logger.info( 'Found gene %s' % gene)
                 break
             
         if not gene:
@@ -483,8 +501,6 @@ class NameSetParser(object):
             old = False
             
         self.gene_count += 1
-        if self.gene_count % 2000 == 0:
-            logger.info('%i genes in %f seconds' % (self.gene_count,time.clock() - self.start_time))
             
         self.add_gene(gene)
         
@@ -553,234 +569,6 @@ class TssLinkBuffer(FeatureDataBuffer):
                 self.objects.append(data_point)
         Buffer.process(self)
         del self.data_store
-
-def process_genes_file(genes_fpkms,dataset,nearest_ref=False,cuff_id=False,short_name=False,**kwargs):
-    
-    genes_file = open(genes_fpkms)
-    first_line = genes_file.readline()
-    headers = first_line.split()
-    
-    
-    
-    
-    
-    name_count = 0
-
-    gene_count = 0
-    all_features = Feature.objects.filter(type=whole_gene)
-    features_by_gene_id = {}
-    gene_index = {}
-    for old_feature in all_features:
-        features_by_gene_id[old_feature.tracking_id] = old_feature
-    
-    start_time = time.clock()
-    unsaved_features = []
-    unsaved_data = {}
-    names = []
-    for line in genes_file:
-        fields = line.split()
-        
-        gene = False
-        current_names = []
-        
-        for ns,field in self.old_namesets:
-            if fields[field] == '-':
-
-                continue
-            
-            if not gene:
-            
-                try:
-                    name = GeneName.objects.get(gene_name_set=ns,name=fields[field])
-                    gene = name.gene
-                    
-                except (GeneName.DoesNotExist, GeneName.MultipleObjectsReturned):
-                    name = GeneName(gene_name_set=ns,name=fields[field])
-            
-            else:
-                try:
-                    name = GeneName.objects.get(gene=gene,gene_name_set=ns,name=fields[field])
-                    
-                except GeneName.DoesNotExist:
-                    name = GeneName(gene=gene,gene_name_set=ns,name=fields[field])
-                
-            names.append(name)
-            
-        for ns,field in new_namesets:
-            if fields[field] == '-':
-                continue
-                
-            current_names.append(GeneName(gene_name_set=ns,name=fields[field]))
-                
-        if not gene:
-            gene = Gene(locus=fields[6],length=0)
-            gene.save()
-        gene_index[fields[0]] = gene
-        for cn in current_names:
-            name_count += 1
-            cn.gene = gene
-        
-        names.extend(current_names)
-        current_names = []
-        
-        #logger.debug('Added Gene %i: %s' % (gene_count,feature.name))
-            
-        if name_count % 50 == 0:
-            GeneName.objects.bulk_create(names)
-            names = []
-            total_time = time.clock() - start_time
-            logger.info('Added %i names in %f seconds.' % (name_count,total_time))
-            
-        if fields[0] not in features_by_gene_id:
-            unsaved_features.append(Feature(gene=gene,type=whole_gene,name=fields[4],tracking_id=fields[0],locus=fields[6],length=0))
-            gene_count += 1
-            
-        if gene_count != 0 and gene_count % 140 == 0:
-            Feature.objects.bulk_create(unsaved_features)
-            unsaved_features = []
-            total_time = time.clock() - start_time
-            logger.info('Added %i genes in %f seconds.' % (gene_count,total_time))
-            
-        unsaved_data[fields[0]] = []
-        for i,sample in enumerate(samples):
-            
-            value,low,high,status = fields[9+(i*4):13+(i*4)]
-            unsaved_data[fields[0]].append(FeatureData(sample=sample,value=value,low_confidence=low,high_confidence=high,status=status))
-    
-    
-    GeneName.objects.bulk_create(names)
-    names = []
-    total_time = time.clock() - start_time
-    logger.info('Added %i names in %f seconds.' % (name_count,total_time))
-    
-    Feature.objects.bulk_create(unsaved_features)
-    unsaved_features = []
-    total_time = time.clock() - start_time
-    logger.info('Added %i genes in %f seconds.' % (gene_count,total_time))
-    
-    all_features = Feature.objects.filter(type=whole_gene)
-    features_by_gene_id = {}
-    for old_feature in all_features:
-        features_by_gene_id[old_feature.tracking_id] = old_feature
-        
-    data_to_add = []
-    data_count = 0
-    for gene_id in unsaved_data:
-        for data in unsaved_data[gene_id]:
-            data.feature = features_by_gene_id[gene_id]
-            data_to_add.append(data)
-            data_count += 1
-            if data_count % 90 == 0:
-                FeatureData.objects.bulk_create(data_to_add)
-                data_to_add = []
-                total_time = time.clock() - start_time
-                logger.info('Added %i data points in %f seconds.' % (data_count,total_time))
-    print 'Added %i Genes' % gene_count
-    print 'Added %i Gene Names' % name_count
-    
-    return features_by_gene_id,sample_index,gene_index
-            
-def process_tests_file(tests_file,dataset,feature,test,feature_index,sample_index):
-    feature_type,created = FeatureType.objects.get_or_create(name=feature)
-    test_type,created = TestType.objects.get_or_create(name=test)
-    test_count = 0
-    unsaved_tests = []
-    with open(tests_file) as tests:
-        next(tests)
-        for line in tests:
-            test_count += 1
-            fields = line.split()
-   
-            
-            feature = feature_index[fields[0]]
-            sample1 = sample_index[fields[4]]
-            sample2 = sample_index[fields[5]]
-            
-            unsaved_tests.append(TestResult(feature=feature,
-                        type=test_type,
-                        sample1=sample1,
-                        sample2=sample2,
-                        test_statistic=fields[10],
-                        status=fields[6],
-                        p_value=fields[11],
-                        q_value=fields[12]
-                        ))
-            if test_count % 50 == 0:
-                TestResult.objects.bulk_create(unsaved_tests)
-                unsaved_tests = []
-                print 'Added %i tests' % test_count
-    print 'Added %i Tests (%s - %s)' % (test_count,feature_type.name,test_type.name)
-                        
-def process_feature_file(filename,dataset,feature,gene_index):
-    feature_count = 0
-    feature_file = open(filename)
-    first_line = feature_file.readline()
-    headers = first_line.split()
-    no_samples = (len(headers) - 9)/4
-    
-    feature_type,created = FeatureType.objects.get_or_create(name=feature)
-    tss_type = FeatureType.objects.get(name='tss_group')
-    
-    for line in feature_file:
-        fields = line.split()
-        feature_count += 1
-        gene = Gene.from_tracking_id_and_dataset(fields[3],dataset)
-        
-        feature,created = Feature.objects.get_or_create(gene=gene,type=feature_type,name=fields[0],tracking_id=fields[0],locus=fields[6],length=0)
-        feature.save()
-        
-        if feature_type.name != 'tss_group' and fields[5] != '-':
-            tss_id = fields[5]
-            tss_group = Feature.from_tracking_id_and_type(tss_id,tss_type)
-            tss_link = FeatureLink(feature1=feature,feature2=tss_group,name='tss_link_%s'%feature_type.name)
-            tss_link.save()
-              
-        for i,sample in enumerate(samples):
-            
-            value,low,high,status = fields[9+(i*4):13+(i*4)]
-            feature_data = FeatureData(feature=feature,sample=sample,value=float(value),low_confidence=low,high_confidence=high,status=status)
-            feature_data.save()
-            
-    print 'Added %i %ss' % (feature_count,feature_type.name)
-        
-def process_cufflinks_directory(cuffdir,**kwargs):
-    
-    genes_fpkm_file = os.path.join(cuffdir,'genes.fpkm_tracking')
-    assert os.path.exists(genes_fpkm_file)
-    
-    dataset = Dataset()
-    dataset.save()
-    
-    gene_index,sample_index = process_genes_file(genes_fpkm_file,dataset,**kwargs)
-    
-    genes_tests_file = os.path.join(cuffdir,'gene_exp.diff')
-    assert os.path.exists(genes_tests_file)
-    
-    process_tests_file(genes_tests_file,dataset,'whole_gene','expression_t_test',gene_index,sample_index)
-    
-    # Process the tss_groups.fpkm_tracking file
-    TSS_file = os.path.join(cuffdir,'tss_groups.fpkm_tracking')
-    assert os.path.exists(TSS_file)
-    
-    process_feature_file(TSS_file,dataset,'tss_group',gene_index,sample_index)
-    
-    # Process the tss_group_exp.diff file
-    TSS_tests_file = os.path.join(cuffdir,'tss_group_exp.diff')
-    assert os.path.exists(TSS_tests_file)
-    
-    process_tests_file(TSS_tests_file,dataset,'tss_group','expression_t_test')
-    
-    # Process the isoforms.fpkm_tracking file
-    isoforms_file = os.path.join(cuffdir,'isoforms.fpkm_tracking')
-    assert os.path.exists(isoforms_file)
-    
-    process_feature_file(isoforms_file,dataset,'isoform')
-    
-    # Process the isoform_exp.diff file
-    isoform_tests_file = os.path.join(cuffdir,'isoform_exp.diff')
-    assert os.path.exists(isoform_tests_file)
-    
-    process_tests_file(isoform_tests_file,dataset,'isoform','expression_t_test')
 
 def import_cufflinks(argset=[], **kwargs):
     cuffdir = argset[0]
