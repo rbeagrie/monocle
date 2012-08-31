@@ -2,7 +2,7 @@ import os
 
 # Django settings for monocle project.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -25,7 +25,7 @@ DATABASES = {
         #'NAME': os.path.join(PROJECT_PATH,'monocle.db'),                      # Or path to database file if using sqlite3.
         'NAME': 'monocle',
         'USER': 'monocle',                      # Not used with sqlite3.
-        'PASSWORD': 'monocle_password',                  # Not used with sqlite3.
+        'PASSWORD': 'monoclepass',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
@@ -177,7 +177,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console':{
-            'level':'DEBUG',
+            'level':'INFO',
             'class':'logging.StreamHandler',
             'formatter': 'simple'
         }

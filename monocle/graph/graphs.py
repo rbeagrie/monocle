@@ -196,6 +196,7 @@ class genelist_boxplot():
         self.ax.tick_params(axis='both', direction='out')
         self.ax.get_xaxis().tick_bottom()   # remove unneeded ticks 
         self.ax.get_yaxis().tick_left()
+        self.ax.set_yscale('log')
         self.x_labels = []
         self.list_data = []
         

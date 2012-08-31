@@ -61,7 +61,7 @@ def list(request, list_id, dataset_id):
     graph = genelist_boxplot()
     
     for sample in samples:
-        FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='whole_gene',feature__gene__genelist=list))
+        FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))
         print FPKMS
         graph.add_sample(sample.name,FPKMS)
         
