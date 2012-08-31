@@ -1,9 +1,7 @@
 import os
+import yaml
 
 # Django settings for monocle project.
-
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -12,22 +10,54 @@ ADMINS = (
 # Special Monocle Settings
 
 PROJECT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__),'..','..'))
-MONOCLE_IP = '127.0.0.1'
-MONOCLE_PORT = '6565'
 MONOCLE_VERSION = '0.04'
 
 
 MANAGERS = ADMINS
 
+# get settings from db/settings.yaml (if any missing all will default)
+# this allows customising the database and web server details after deployment
+config = {}
+try:
+  config_file = os.path.join( PROJECT_PATH , 'settings.yaml' )
+  if os.path.exists( config_file ):
+    config = yaml.load( file( config_file, 'r' ))
+except:
+  pass
+
+def get_config( config_yaml, index, default='' ):
+  print 'Setting: %s' % index
+  try:
+    conf_setting = config_yaml[ index ]
+    if conf_setting is None:
+        conf_setting = ''
+    print conf_setting
+    return conf_setting
+  except:
+    print default
+    return default
+
+DEBUG = get_config( config, 'debug', False )
+TEMPLATE_DEBUG = get_config( config, 'template_debug', DEBUG )
+DATABASE_ENGINE = 'django.db.backends.%s' % get_config( config, 'database_engine', 'sqlite3' )
+DATABASE_NAME = get_config( config, 'database_name', os.path.join(PROJECT_PATH,'monocle.db') )
+DATABASE_USER = get_config( config, 'database_user', '' )
+DATABASE_PASSWORD = get_config( config, 'database_password', '' )
+DATABASE_HOST = get_config( config, 'database_host', '' )
+DATABASE_PORT = get_config( config, 'database_port', '' )
+TIME_ZONE = get_config( config, 'time_zone', 'Europe/London' )
+LANGUAGE_CODE = get_config( config, 'language_code', 'en-uk' )
+MONOCLE_IP = get_config( config, 'server_ip', '127.0.0.1')
+MONOCLE_PORT = get_config( config, 'server_port', '8000')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        #'NAME': os.path.join(PROJECT_PATH,'monocle.db'),                      # Or path to database file if using sqlite3.
-        'NAME': 'monocle',
-        'USER': 'monocle',                      # Not used with sqlite3.
-        'PASSWORD': 'monoclepass',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': DATABASE_ENGINE, 
+        'NAME': DATABASE_NAME,                      
+        'USER': DATABASE_USER,                      
+        'PASSWORD': DATABASE_PASSWORD,                  
+        'HOST': DATABASE_HOST,                      
+        'PORT': DATABASE_PORT,                      
     }
 }
 

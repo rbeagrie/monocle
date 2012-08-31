@@ -39,7 +39,5 @@ Thumbs.db
 # Monocle files #
 #################
 
-cuffData.*
 monocle.db
-monocle/genes/static/*
-!monocle/genes/static/css*
+settings.yaml
