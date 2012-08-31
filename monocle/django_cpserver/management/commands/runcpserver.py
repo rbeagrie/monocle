@@ -171,8 +171,14 @@ def start_server(options):
     
     # Serve static files as well
     app = WSGIHandler()
+    import django.core.servers.basehttp
+    app = django.core.servers.basehttp.AdminMediaHandler(app)
     path = { '/': app}
     path[settings.STATIC_URL] = mediahandler.MediaHandler(settings.STATIC_ROOT)
+    path['%s/admin/' % settings.STATIC_URL] = mediahandler.MediaHandler(
+                 os.path.join( django.contrib.admin.__path__[0],
+                               'media' )
+                 )
     dispatcher =  WSGIPathInfoDispatcher( path )
     
     server = Server(
