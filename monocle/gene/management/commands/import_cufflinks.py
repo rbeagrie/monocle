@@ -216,8 +216,11 @@ class FeatureImporter(object):
                 self.tss_buffer.add(tracking_id,FeatureLink(feature2=tss_group,name='tss_link_%s'%self.feature_name))
         
         for i,sample in enumerate(self.samples):
-            
             value,low,high,status = fields[9+(i*4):13+(i*4)]
+            if low == '-nan':
+                low = 0
+            if high == '-nan':
+                high = 0
             self.data_buffer.add(tracking_id,FeatureData(sample=sample,value=value,low_confidence=low,high_confidence=high,status=status))
             self.data_count += 1
             
