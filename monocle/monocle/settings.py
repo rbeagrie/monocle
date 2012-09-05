@@ -26,18 +26,15 @@ except:
   pass
 
 def get_config( config_yaml, index, default='' ):
-  print 'Setting: %s' % index
   try:
     conf_setting = config_yaml[ index ]
     if conf_setting is None:
         conf_setting = ''
-    print conf_setting
     return conf_setting
   except:
-    print default
     return default
 
-DEBUG = get_config( config, 'debug', False )
+DEBUG = get_config( config, 'debug', True )
 TEMPLATE_DEBUG = get_config( config, 'template_debug', DEBUG )
 DATABASE_ENGINE = 'django.db.backends.%s' % get_config( config, 'database_engine', 'sqlite3' )
 DATABASE_NAME = get_config( config, 'database_name', os.path.join(PROJECT_PATH,'monocle.db') )
