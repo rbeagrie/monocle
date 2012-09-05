@@ -16,13 +16,17 @@ def gene(request, gene_id, dataset_id):
     
     gene = get_object_or_404(Gene, pk=gene_id)
     dataset = get_object_or_404(Dataset, pk=dataset_id)
-    
-    graph = expression_line(dataset=dataset)
-    graph.add_gene(gene)
+    no_samples = Sample.objects.filter(dataset=dataset).count()
+    if no_samples > 4:
+        graph = GeneLine(dataset=dataset)
+    else:
+        graph = GeneBar(dataset=dataset)
+        
+    graph.add(gene)
         
     graph.ax.set_title(str(gene))
     
-    return graph.response(errors=True)    
+    return graph.response()    
 
 @login_required    
 def tss(request, gene_id, dataset_id):
@@ -31,8 +35,8 @@ def tss(request, gene_id, dataset_id):
     dataset = get_object_or_404(Dataset, pk=dataset_id)
     tss_groups = get_list_or_404(Feature,gene=gene,type__name='tss_group',featuredata__sample__dataset=dataset)
     
-    graph = expression_line(dataset)
-    graph.add_tss(gene)
+    graph = TssLine(dataset)
+    graph.add(gene)
         
     graph.ax.set_title(str(gene))
     
@@ -45,8 +49,8 @@ def isoform(request, gene_id, dataset_id):
     dataset = get_object_or_404(Dataset, pk=dataset_id)
     isoforms = get_list_or_404(Feature,gene=gene,type__name='isoform',featuredata__sample__dataset=dataset)
     
-    graph = expression_line(dataset)
-    graph.add_isoforms(gene)
+    graph = IsoformLine(dataset)
+    graph.add(gene)
         
     graph.ax.set_title(str(gene))
     
@@ -58,7 +62,7 @@ def list(request, list_id, dataset_id):
     dataset = get_object_or_404(Dataset, pk=dataset_id)
     samples = Sample.objects.filter(dataset=dataset)
     
-    graph = genelist_boxplot()
+    graph = GeneListBoxplot()
     
     for sample in samples:
         FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))
