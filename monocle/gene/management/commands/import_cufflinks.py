@@ -12,6 +12,13 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+LEVELS = {
+    0 : 'ERROR',
+    1 : 'WARNING',
+    2 : 'INFO',
+    3 : 'DEBUG'
+    }
+
 class Command(BaseCommand):
     args = "[cuffdiff_directory]"
     help = "Imports data from a CuffDiff run"
@@ -42,6 +49,7 @@ class Command(BaseCommand):
         from django.conf import settings
         from django.utils import translation
         # Activate the current language, because it won't get activated later.
+        logger.setLevel(LEVELS[int(options['verbosity'])])
         try:
             translation.activate(settings.LANGUAGE_CODE)
         except AttributeError:
@@ -166,6 +174,8 @@ class FeatureImporter(object):
             for line in features:
                 self.process_feature_line(line)
                 self.feature_count += 1
+                if self.feature_count % 1000 == 0:
+                    logger.debug('Added %i %ss' % (self.feature_count,self.feature_type.name))
                 
         self.save_features()
         
