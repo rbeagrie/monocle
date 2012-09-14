@@ -17,8 +17,6 @@ def index(request):
 
 @login_required
 def detail(request, gene_id):
-    if not request.user.is_authenticated():
-        return render_to_response('myapp/login_error.html')
     gene = get_object_or_404(Gene, pk=gene_id)
     datasets = Dataset.objects.filter(sample__featuredata__feature__gene=gene).distinct()
     dataset_info = []

@@ -35,6 +35,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *.lnk
+*.swp
 
 # Monocle files #
 #################
