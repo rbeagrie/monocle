@@ -107,7 +107,7 @@ class Sample(models.Model):
         return Sample.objects.filter(dataset=dataset).filter(name=name)[0]
     
 class FeatureType(models.Model):
-    name = models.CharField(max_length=70)
+    name = models.CharField(max_length=70,db_index=True)
     description = models.TextField()
     
     def __unicode__(self):

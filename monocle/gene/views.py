@@ -9,10 +9,18 @@ from gene.models import *
 from list.models import *
 import numpy
 import django
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('gene')
+print 'level',logger.level
 
 @login_required
 def index(request):
-
+    logger.debug('Debug message')
+    logger.info('info message')
+    print logger
+    print 'Happy happy'
     return render_to_response('gene/index.html',{},context_instance=RequestContext(request))
 
 @login_required
