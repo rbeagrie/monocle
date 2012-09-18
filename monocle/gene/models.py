@@ -71,8 +71,7 @@ class GeneNameSet(models.Model):
 class GeneName(models.Model):
     gene = models.ForeignKey(Gene)
     gene_name_set = models.ForeignKey(GeneNameSet)
-    name = models.CharField(max_length=70)
-
+    name = models.CharField(max_length=70,db_index=True)
     @staticmethod
     def from_name(name):
         matching_names = GeneName.objects.filter(name__iexact=name)
