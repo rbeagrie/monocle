@@ -69,7 +69,7 @@ def list(request, list_id, dataset_id):
     graph = GeneListBoxplot()
     
     for sample in samples:
-        FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))
+        FPKMS = numpy.array(map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))) + 1.0
         graph.add_sample(sample.name,FPKMS)
         
     graph.ax.set_title('List #%i - %s' % (list.pk,list.name))

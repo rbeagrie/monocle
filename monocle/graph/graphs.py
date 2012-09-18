@@ -332,6 +332,9 @@ class GeneListBoxplot():
         
         self.ax.set_xticks(range(1,len(self.x_labels)+1))
         self.ax.set_xticklabels(self.x_labels)
+
+        limits = self.ax.get_ylim()
+        self.ax.set_ylim(0.1,limits[1])
         
         canvas=FigureCanvas(self.fig)
         response=django.http.HttpResponse(content_type='image/png')
