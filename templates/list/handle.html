@@ -19,13 +19,13 @@
 
 <p>{% for gene in gene_list %} {{ gene }}, {% endfor %}</p>
 
-<h2>{{ multiple_matched }} genes matched multiple gnes:</h2>
+<h2>{{ multiple_matched }} genes matched multiple times:</h2>
 
 <p>{% for gene_name in found_multiple %} {{ gene_name }}, {% endfor %}</p>
 
 <h2>{{ not_matched }} genes could not be found:</h2>
 
-<p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}</p> hello - {{ list }}
+<p>{% for gene_name in not_found %} {{ gene_name }}, {% endfor %}
 
 <p><a href="{% url list.views.detail 1 %}">Continue to Gene List</a></p>
 

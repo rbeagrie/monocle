@@ -71,8 +71,7 @@ class GeneNameSet(models.Model):
 class GeneName(models.Model):
     gene = models.ForeignKey(Gene)
     gene_name_set = models.ForeignKey(GeneNameSet)
-    name = models.CharField(max_length=70)
-
+    name = models.CharField(max_length=70,db_index=True)
     @staticmethod
     def from_name(name):
         matching_names = GeneName.objects.filter(name__iexact=name)
@@ -107,7 +106,7 @@ class Sample(models.Model):
         return Sample.objects.filter(dataset=dataset).filter(name=name)[0]
     
 class FeatureType(models.Model):
-    name = models.CharField(max_length=70)
+    name = models.CharField(max_length=70,db_index=True)
     description = models.TextField()
     
     def __unicode__(self):

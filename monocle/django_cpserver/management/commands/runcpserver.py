@@ -11,6 +11,18 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from monocle import settings
 
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('gene')
+
+LEVELS = {
+    0 : 'ERROR',
+    1 : 'WARNING',
+    2 : 'INFO',
+    3 : 'DEBUG'
+}
 CPSERVER_HELP = r"""
   Run this project in a CherryPy webserver. To do this, CherryPy from
   http://www.cherrypy.org/ is required.
@@ -83,7 +95,7 @@ class Command(BaseCommand):
             translation.activate(settings.LANGUAGE_CODE)
         except AttributeError:
             pass
-        runcpserver(args)
+        runcpserver(args,**options)
         
     def usage(self, subcommand):
         return CPSERVER_HELP
@@ -230,6 +242,12 @@ def runcpserver(argset=[], **kwargs):
         fp.write("%d\n" % os.getpid())
         fp.close()
     
+
+    # Set the logging level
+    lev = LEVELS[int(options['verbosity'])]
+    logger.setLevel(lev)
+
+    logger.debug('Turned logging on')
     # Start the webserver
     print 'starting server with options %s' % options
     webbrowser.open('http://localhost:9000/')

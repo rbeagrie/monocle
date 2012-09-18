@@ -204,7 +204,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console':{
-            'level':'INFO',
+            'level':'DEBUG',
             'class':'logging.StreamHandler',
             'formatter': 'simple'
         }
@@ -221,6 +221,10 @@ LOGGING = {
             'propagate': True,
         },
         'gene.management.commands.import_cufflinks': {
+            'handlers': ['console'],
+            'level': 'INFO'
+        },
+        'gene': {
             'handlers': ['console'],
             'level': 'INFO'
         }

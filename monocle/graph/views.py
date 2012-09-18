@@ -10,6 +10,10 @@ from list.models import *
 from  graphs import *
 import numpy
 import django
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('gene')
 
 @login_required
 def gene(request, gene_id, dataset_id):
@@ -59,14 +63,13 @@ def isoform(request, gene_id, dataset_id):
 def list(request, list_id, dataset_id):
 
     list = get_object_or_404(GeneList, pk=list_id)
+    logger.debug('Got the list')
     dataset = get_object_or_404(Dataset, pk=dataset_id)
     samples = Sample.objects.filter(dataset=dataset)
-    
     graph = GeneListBoxplot()
     
     for sample in samples:
-        FPKMS = map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))
-        print FPKMS
+        FPKMS = numpy.array(map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))) + 1.0
         graph.add_sample(sample.name,FPKMS)
         
     graph.ax.set_title('List #%i - %s' % (list.pk,list.name))
