@@ -177,9 +177,9 @@ def start_server(options):
         #ensure the that the daemon runs as specified user
         change_uid_gid(options['server_user'], options['server_group'])
     
-    from wsgiserver2 import CherryPyWSGIServer as Server, WSGIPathInfoDispatcher
+    from django_cpserver.wsgiserver2 import CherryPyWSGIServer as Server, WSGIPathInfoDispatcher
     from django.core.handlers.wsgi import WSGIHandler
-    import mediahandler
+    import django_cpserver.mediahandler as mediahandler
     
     # Serve static files as well
     app = WSGIHandler()
