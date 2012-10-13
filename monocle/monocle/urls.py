@@ -14,6 +14,7 @@ urlpatterns = patterns('',
 	(r'^gene/', include('gene.urls')),
 	(r'^list/', include('list.urls')),
 	(r'^graph/', include('graph.urls')),
+	(r'^dataset/', include('dataset.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

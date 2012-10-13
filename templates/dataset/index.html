@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<strong>Datasets</strong>{% endblock %}
+
+{% block nav %}
+		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
+		<li class="active"><a href="{% url list.views.index %}">View Gene Lists</a></li>
+		<li><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li><a href="{% url dataset.views.index %}">View Datasets</a></li>
+		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
+		{% endblock %}
+
+{% block content %}
+
+
+<h1>All Datasets</h1>
+
+<table>
+
+<tr>
+
+<th>Dataset ID</th>
+
+<th>Dataset Name</th>
+
+</tr>
+
+{% for dataset in datasets %}
+
+<tr>
+<td><a href="{% url dataset.views.detail dataset.pk %}">{{ dataset.pk }}</td>
+<td><a href="{% url dataset.views.detail dataset.pk %}">{{ dataset.name }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% endblock %}
