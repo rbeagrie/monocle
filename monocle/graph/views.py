@@ -75,3 +75,12 @@ def list(request, list_id, dataset_id):
     graph.ax.set_title('List #%i - %s' % (list.pk,list.name))
     
     return graph.response()
+
+def dataset(request, dataset_id):
+
+    dataset = get_object_or_404(Dataset, pk=dataset_id)
+    graph = DatasetHistogram(dataset)
+    graph.draw()
+    graph.ax.set_title(str(dataset))
+
+    return graph.response()

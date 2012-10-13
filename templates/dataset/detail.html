@@ -14,7 +14,7 @@
 
 <h1>Overview for {{ dataset }} </h1>
 
-<p><img src="" /></p>
+<p><img src="{% url graph.views.dataset dataset.pk %}" /></p>
 
 <p><a href="{% url dataset.views.index %}">Back to datasets</a></p>
 

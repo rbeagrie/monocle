@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
 import matplotlib, pylab
 import numpy as np
+from scipy.stats import gaussian_kde
 
 class BaseGraph(object):
     
@@ -54,7 +55,9 @@ class BaseGraph(object):
         elif self.y_high < new_high:
             self.y_high = new_high
         
-        self.ax.set_ylim(self.y_low-0.5,self.y_high+0.5)
+        y_range = self.y_high-self.y_low
+        y_margin = y_range*0.08
+        self.ax.set_ylim(self.y_low-y_margin,self.y_high+y_margin)
     
     def draw_error(self,x,y_low,y_high,color,bar_width=0.1):
         x += self.offset
@@ -122,6 +125,53 @@ class BaseLine(BaseGraph):
         for i,gd in enumerate(gene_data):
         
             self.errors.append((i,gd.low_confidence,gd.high_confidence,gene_line.get_color()))
+
+class BaseHistogram(BaseGraph):
+    def __init__(self,dataset):
+        BaseGraph.__init__(self,dataset)
+        self.draw_errors = False
+        box = self.ax.get_position()
+        self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+        
+        
+             
+    def add_data(self,gene_data):
+    
+        fpkms = map(lambda f: f.value,gene_data)
+
+        # Take the log of the fpkm values
+        fpkms = np.log2(np.array(fpkms))
+
+        # Remove any -Inf values
+        fpkms = fpkms[fpkms > -20]
+
+        # Calculate a kernel density estimate
+        density = gaussian_kde(fpkms)
+
+        # Make a range for the x axis
+        x = np.arange(-12,12,0.1)
+
+        # Get the kernel density at each x axis point
+        y = density(x)
+
+        gene_line = self.ax.plot(x,y,zorder=10,label='Gene',color=self.next_color())
+        
+        y_high = max(y)
+        print max(y)
+        
+        self.update_y_limits(0,y_high)
+        
+        return gene_line[0]
+   
+    def response(self):
+        self.ax.set_ylabel('Density')
+        self.ax.set_xlabel('Log2( FPKM )')
+        
+        self.ax.legend(self.legend_entries.values(),self.legend_entries.keys(),loc='center left', bbox_to_anchor=(1, 0.5))
+        self.ax.set_xlim(-12,12)
+
+        return BaseGraph.response(self)
+
 
 class BaseBar(BaseGraph):
 
@@ -218,6 +268,17 @@ class BaseIsoform(BaseGraph):
             line = self.add_data(gene_data)
             self.legend_entries[feature.name] = line
             
+class BaseDataset(BaseGraph):
+    
+    def draw(self):
+        feature_type = FeatureType.objects.get(name='gene')
+        samples = Sample.objects.filter(dataset=self.dataset)
+        print 'got samples:', samples
+        for sample in samples:
+            sample_data = FeatureData.objects.filter(feature__type=feature_type,sample=sample)
+            line = self.add_data(sample_data)
+            self.legend_entries[sample.name] = line
+
 class GeneBar(BaseBar,BaseGene):
     pass
                     
@@ -340,3 +401,6 @@ class GeneListBoxplot():
         response=django.http.HttpResponse(content_type='image/png')
         canvas.print_png(response)
         return response
+
+class DatasetHistogram(BaseHistogram,BaseDataset):
+    pass
