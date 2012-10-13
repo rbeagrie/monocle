@@ -4,6 +4,7 @@ import yaml
 # Django settings for monocle project.
 
 ADMINS = (
+    ('Rob Beagrie', 'rob@beagrie.com'),
     # ('Your Name', 'your_email@example.com'),
 )
 
@@ -204,7 +205,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console':{
-            'level':'DEBUG',
+            'level':'INFO',
             'class':'logging.StreamHandler',
             'formatter': 'simple'
         }
