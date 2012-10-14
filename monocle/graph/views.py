@@ -84,3 +84,12 @@ def dataset(request, dataset_id):
     graph.ax.set_title(str(dataset))
 
     return graph.response()
+
+def samples(request, sample_1_id, sample_2_id):
+
+    sample_1 = get_object_or_404(Sample, pk=sample_1_id)
+    sample_2 = get_object_or_404(Sample, pk=sample_2_id)
+    graph = SampleComparisonScatter()
+    graph.add(sample_1,sample_2)
+
+    return graph.response()

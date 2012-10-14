@@ -18,4 +18,33 @@
 
 <p><a href="{% url dataset.views.index %}">Back to datasets</a></p>
 
+<h2>Compare Datasets</h2>
+
+<p>&nbsp;</p>
+<form name="compare_samples" action="{% url dataset.views.detail dataset.pk %}" method="post">
+<table>
+<tr>
+    <th> Sample 1: </th> <th> Sample 2: </th>
+<tr>
+    <td>
+        <select name='sample_1_id'>
+            {% for sample in dataset.sample_set.all %}
+            <option value="{{ sample.pk }}">{{ sample.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <select name='sample_2_id'>
+            {% for sample in dataset.sample_set.all %}
+            <option value="{{ sample.pk }}">{{ sample.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+</tr>
+</table>
+
+<p><input type="submit" value="Compare!" /></p>
+{% csrf_token %}
+</form>
+
 {% endblock %}

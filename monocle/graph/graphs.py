@@ -12,11 +12,10 @@ from scipy.stats import gaussian_kde
 
 class BaseGraph(object):
     
-    def __init__(self,dataset):
+    def __init__(self):
     
         matplotlib.rc('axes',edgecolor='white')
 
-        self.dataset = dataset
         self.fig=Figure(figsize=(13,6))
         self.fig.set_facecolor('white')
         self.ax=self.fig.add_subplot(111)
@@ -77,7 +76,8 @@ class BaseGraph(object):
 
 class BaseLine(BaseGraph):
     def __init__(self,dataset):
-        BaseGraph.__init__(self,dataset)
+        BaseGraph.__init__(self)
+        self.dataset = dataset
         self.draw_errors = False
         box = self.ax.get_position()
         self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
@@ -128,7 +128,8 @@ class BaseLine(BaseGraph):
 
 class BaseHistogram(BaseGraph):
     def __init__(self,dataset):
-        BaseGraph.__init__(self,dataset)
+        BaseGraph.__init__(self)
+        self.dataset = dataset
         self.draw_errors = False
         box = self.ax.get_position()
         self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
@@ -173,10 +174,44 @@ class BaseHistogram(BaseGraph):
         return BaseGraph.response(self)
 
 
+class BaseScatter(BaseGraph):
+    def __init__(self):
+        BaseGraph.__init__(self)
+        box = self.ax.get_position()
+        self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+             
+    def add_data(self,sample_1_data,sample_2_data):
+    
+        sample_1_fpkms = map(lambda f: f.value,sample_1_data)
+        sample_2_fpkms = map(lambda f: f.value,sample_2_data)
+
+        # Take the log of the fpkm values
+        sample_1_fpkms = np.log2(np.array(sample_1_fpkms))
+        sample_2_fpkms = np.log2(np.array(sample_2_fpkms))
+
+        # Remove any -Inf values
+        filter_fun = lambda t: ((t[0] > -20) and (t[1] > -20))
+
+        sample_1_fpkms,sample_2_fpkms = zip(*filter(filter_fun,zip(sample_1_fpkms,sample_2_fpkms)))
+
+        gene_line = self.ax.plot(sample_1_fpkms,sample_2_fpkms,'.',zorder=10,label='Gene',color=self.next_color())
+        
+        return gene_line[0]
+   
+    def response(self):
+        self.ax.set_ylabel('Log2( %s FPKM )' % self.sample_2.name)
+        self.ax.set_xlabel('Log2( %s FPKM )' % self.sample_1.name)
+        
+        self.ax.legend(self.legend_entries.values(),self.legend_entries.keys(),loc='center left', bbox_to_anchor=(1, 0.5))
+
+        return BaseGraph.response(self)
+
+
 class BaseBar(BaseGraph):
 
     def __init__(self,dataset):
-        BaseGraph.__init__(self,dataset)
+        BaseGraph.__init__(self)
+        self.dataset = dataset
         self.y_lows = []
         self.y_highs = []
         self.errors = []
@@ -269,7 +304,6 @@ class BaseIsoform(BaseGraph):
             self.legend_entries[feature.name] = line
             
 class BaseDataset(BaseGraph):
-    
     def draw(self):
         feature_type = FeatureType.objects.get(name='gene')
         samples = Sample.objects.filter(dataset=self.dataset)
@@ -278,6 +312,18 @@ class BaseDataset(BaseGraph):
             sample_data = FeatureData.objects.filter(feature__type=feature_type,sample=sample)
             line = self.add_data(sample_data)
             self.legend_entries[sample.name] = line
+
+class BaseSampleComparison(BaseGraph):
+    def add(self,sample_1,sample_2):
+        self.sample_1 = sample_1
+        self.sample_2 = sample_2
+        feature_type = FeatureType.objects.get(name='gene')
+        features = Feature.objects.filter(type=feature_type).filter(featuredata__sample=sample_1).filter(featuredata__sample=sample_2)
+        sample_1_data = FeatureData.objects.filter(sample=sample_1,feature__in=features).order_by('feature')
+        sample_2_data = FeatureData.objects.filter(sample=sample_2,feature__in=features).order_by('feature')
+
+        line = self.add_data(sample_1_data,sample_2_data)
+        self.legend_entries['Gene FPKM'] = line
 
 class GeneBar(BaseBar,BaseGene):
     pass
@@ -343,7 +389,8 @@ class expression_heat():
 class BaseBoxplot(BaseGraph):
 
     def __init__(self,dataset):
-        BaseGraph.__init__(self,dataset)
+        BaseGraph.__init__(self)
+        self.dataset = dataset
         #self.fig=Figure(figsize=(13,((6.0/19)*height)+1))
         self.ax.set_yscale('log')
         self.x_labels = []
@@ -403,4 +450,7 @@ class GeneListBoxplot():
         return response
 
 class DatasetHistogram(BaseHistogram,BaseDataset):
+    pass
+
+class SampleComparisonScatter(BaseScatter,BaseSampleComparison):
     pass

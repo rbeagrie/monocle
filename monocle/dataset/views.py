@@ -11,5 +11,18 @@ def index(request):
 
 @login_required
 def detail(request,dataset_id):
+    if request.method == 'POST':
+        return redirect('dataset.views.compare',sample_1_id=request.POST['sample_1_id'],sample_2_id=request.POST['sample_2_id'])
+
     dataset = Dataset.objects.get(pk=dataset_id)
     return render_to_response('dataset/detail.html',{'dataset':dataset},context_instance=RequestContext(request))
+
+@login_required
+def compare(request,sample_1_id,sample_2_id):
+
+    sample_1 = Sample.objects.get(pk=sample_1_id)
+    sample_2 = Sample.objects.get(pk=sample_2_id)
+
+    return render_to_response('dataset/compare.html',{'sample_1':sample_1,'sample_2':sample_2},context_instance=RequestContext(request))
+
+    
