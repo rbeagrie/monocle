@@ -91,6 +91,7 @@ class CuffDiffImporter(object):
         self.gene_index,self.sample_index = gene_importer.get_indexes()
         print gene_importer.output()
         del gene_importer
+
         
         # Import the TSS files
         feature_importer = FeatureImporter('tss_group',self.cuffdiff_directory,self.dataset,self.gene_index,self.sample_index)
@@ -197,7 +198,7 @@ class FeatureImporter(object):
         if not tracking_id in self.feature_index:
             if not (self.skip_feature and old):
                 
-                self.feature_buffer.add(Feature(gene=gene,
+                self.feature_buffer.add(Feature(gene_id=gene,
                                                 type=self.feature_type,
                                                 name=tracking_id,
                                                 tracking_id=tracking_id,
@@ -213,7 +214,7 @@ class FeatureImporter(object):
                     logger.warning('Could not find TSS with ID: \'%s\'' % tss_id)
                     continue
                     
-                self.tss_buffer.add(tracking_id,FeatureLink(feature2=tss_group,name='tss_link_%s'%self.feature_name))
+                self.tss_buffer.add(tracking_id,FeatureLink(feature2_id=tss_group,name='tss_link_%s'%self.feature_name))
         
         for i,sample in enumerate(self.samples):
             value,low,high,status = fields[9+(i*4):13+(i*4)]
@@ -228,6 +229,11 @@ class FeatureImporter(object):
     
         # Get the TestType object
         self.test_type,created = TestType.objects.get_or_create(name='expression_t_test')
+
+        # Get a FeatureData index
+        self.featuredata_index = FeatureDataIndex(self.dataset,self.feature_type)
+
+
         
         # Create a Test Buffer
         self.test_buffer = Buffer(TestResult)
@@ -250,19 +256,22 @@ class FeatureImporter(object):
     
         fields = line.split()
 
-        feature = self.feature_index.get(fields[0])
-        sample1 = self.sample_index[fields[4]]
-        sample2 = self.sample_index[fields[5]]
+        data1 = self.featuredata_index.get(fields[0],fields[4])
+        data2 = self.featuredata_index.get(fields[0],fields[5])
         
-        self.test_buffer.add(TestResult(feature=feature,
+        temp_test = TestResult(
                     type=self.test_type,
-                    sample1=sample1,
-                    sample2=sample2,
+                    test_value=fields[9],
                     test_statistic=fields[10],
                     status=fields[6],
                     p_value=fields[11],
                     q_value=fields[12]
-                    ))
+                    )
+
+        temp_test.data1_id = data1
+        temp_test.data2_id = data2
+
+        self.test_buffer.add(temp_test)
         
     def save_features(self):
         
@@ -357,10 +366,12 @@ class FeatureIndex(object):
         del self.features
         self.features = {}
         ids = gene_index.get_ids()
-        feature_list = Feature.objects.filter(gene__id__in = ids, type=self.feature_type)
+        feature_list = Feature.objects.filter(gene__id__in = ids, type=self.feature_type).values('tracking_id','id')
         for feature in feature_list:
                 
-            self.features[feature.tracking_id] = feature
+            self.features[feature['tracking_id']] = feature['id']
+        
+        del feature_list
        
     def __contains__(self,tracking_id):
         return tracking_id in self.features
@@ -368,6 +379,22 @@ class FeatureIndex(object):
     def get(self,tracking_id):
         return self.features[tracking_id]
     
+class FeatureDataIndex(object):
+    def __init__(self,dataset,feature_type):
+        self.data = {}
+        featuredatas = FeatureData.objects.filter(feature__type=feature_type,sample__dataset=dataset).select_related('feature').select_related('sample')
+        for featuredata in featuredatas:
+            self.add(featuredata.feature.tracking_id,featuredata.sample.name,featuredata.pk)
+        del featuredatas
+
+    def add(self,feature_tracking_id,sample_name,data_id):
+        if feature_tracking_id not in self.data:
+            self.data[feature_tracking_id] = {}
+        self.data[feature_tracking_id][sample_name] = data_id
+
+    def get(self,feature_tracking_id,sample_name):
+        return self.data[feature_tracking_id][sample_name]
+
 class GeneIndex(object):
     def __init__(self):
     
@@ -376,7 +403,7 @@ class GeneIndex(object):
         
     def add(self,gene,tracking_id,old):
     
-        self.genes[tracking_id] = gene,old
+        self.genes[tracking_id] = gene.id,old
         self.gene_ids[gene.pk] = tracking_id
         
     def get_ids(self):
@@ -397,9 +424,11 @@ class GeneNameIndex(object):
         self.index = {}
         self.field = field
         self.nameset = nameset
-        names = GeneName.objects.select_related().filter(gene_name_set=nameset)
+        names = GeneName.objects.filter(gene_name_set=nameset).values('name','gene_id')
         for name in names:
-            self.index[name.name] = name.gene
+            self.index[name['name']] = name['gene_id']
+
+        del names
             
     def get_name(self,fields):
         
@@ -537,6 +566,8 @@ class Buffer(object):
     def add(self,object):
     
         self.objects.append(object)
+        if len(self.objects) > 2 * self.batch_size:
+            self.process()
         
     def process(self):
         unprocessed = []
@@ -550,11 +581,13 @@ class Buffer(object):
                 
         logger.info('Added %i %ss in %f seconds.' % (len(self.objects),self.model.__name__,time.clock()-self.start_time))
         del self.objects
+        self.objects = []
             
 class FeatureDataBuffer(Buffer):
     def __init__(self):
         Buffer.__init__(self,FeatureData)
         self.data_store = {}
+        self.count = 0
         
     def add(self,tracking_id,data):
         
@@ -562,15 +595,21 @@ class FeatureDataBuffer(Buffer):
             self.data_store[tracking_id] = []
         
         self.data_store[tracking_id].append(data)
+        self.count += 1
+
+        if self.count >= self.batch_size:
+            self.process()
+        self.count = 0
         
     def process(self,feature_index):
         for tracking_id in self.data_store:
             feature = feature_index.get(tracking_id)
             for data_point in self.data_store[tracking_id]:
-                data_point.feature = feature
+                data_point.feature_id = feature
                 self.objects.append(data_point)
         Buffer.process(self)
         del self.data_store
+        self.data_store = {}
             
 class TssLinkBuffer(FeatureDataBuffer):
     def __init__(self):
@@ -581,10 +620,11 @@ class TssLinkBuffer(FeatureDataBuffer):
         for tracking_id in self.data_store:
             feature = feature_index.get(tracking_id)
             for data_point in self.data_store[tracking_id]:
-                data_point.feature1 = feature
+                data_point.feature1_id = feature
                 self.objects.append(data_point)
         Buffer.process(self)
         del self.data_store
+        self.data_store = {}
 
 def import_cufflinks(argset=[], **kwargs):
     cuffdir = argset[0]

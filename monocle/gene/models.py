@@ -150,10 +150,10 @@ class TestType(models.Model):
     description = models.TextField()
     
 class TestResult(models.Model):
-    feature = models.ForeignKey(Feature)
     type = models.ForeignKey(TestType)
-    sample1 = models.ForeignKey(Sample,related_name='+')
-    sample2 = models.ForeignKey(Sample,related_name='+')
+    data1 = models.ForeignKey(FeatureData,related_name='test_data_1')
+    data2 = models.ForeignKey(FeatureData,related_name='test_data_2')
+    test_value = models.FloatField()
     test_statistic = models.FloatField()
     status = models.CharField(max_length=45)
     p_value = models.FloatField()
