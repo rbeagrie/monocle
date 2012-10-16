@@ -491,6 +491,9 @@ class NameSetParser(object):
         old = True
         
         for index in self.old_namesets:
+            # This is an ugly hack, skip the short name as it may be duplicated.
+            if index.field == 4:
+                continue
             gene = index.parse(fields)
             if gene:
                 break

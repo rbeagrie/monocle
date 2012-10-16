@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}<strong>404 - Page Not Found</strong>{% endblock %}
+
+{% block content %}
+
+
+<h1>404 - Page not found</h1>
+
+<p>The page "{{request_path}}" could not be found. Please return to the <a href='/'>home page</a>.</p>
+
+{% endblock %}
