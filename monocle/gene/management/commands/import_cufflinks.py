@@ -50,6 +50,7 @@ class Command(BaseCommand):
         from django.utils import translation
         # Activate the current language, because it won't get activated later.
         logger.setLevel(LEVELS[int(options['verbosity'])])
+        print 'Logging level', logger.level
         try:
             translation.activate(settings.LANGUAGE_CODE)
         except AttributeError:
@@ -87,22 +88,28 @@ class CuffDiffImporter(object):
         # Get the namesets
         
         # Import the genes files
+        logger.debug('Starting to import Gene level information')
         gene_importer = GeneImporter(self.cuffdiff_directory,self.dataset,**self.options)
         self.gene_index,self.sample_index = gene_importer.get_indexes()
         print gene_importer.output()
+        logger.debug('Deleting the Gene importer')
         del gene_importer
 
         
         # Import the TSS files
+        logger.debug('Starting to import TSS level information')
         feature_importer = FeatureImporter('tss_group',self.cuffdiff_directory,self.dataset,self.gene_index,self.sample_index)
         self.tss_index = feature_importer.feature_index
         print feature_importer.output()
+        logger.debug('Deleting the TSS importer')
         del feature_importer
         
         # Import the other feature files
         for feature_name in ['isoform','cds']:
+            logger.debug('Starting to import %s level information' % feature_name)
             feature_importer = FeatureImporter(feature_name,self.cuffdiff_directory,self.dataset,self.gene_index,self.sample_index,self.tss_index)
             print feature_importer.output()
+            logger.debug('Deleting the %s importer' % feature_name)
             del feature_importer
         
         logger.info('Whole import took %f seconds' % time.clock())
@@ -127,8 +134,10 @@ class FeatureImporter(object):
         # Get the FeatureType object
         self.feature_type,created = FeatureType.objects.get_or_create(name=self.feature_name)
         
+        logger.debug('Starting to process %s feature file' % self.feature_name)
         self.process_feature_file()
         
+        logger.debug('Starting to process %s tests file' % self.feature_name)
         self.process_tests_file()
         
     def get_files(self):
@@ -151,7 +160,9 @@ class FeatureImporter(object):
     def process_feature_file(self):
         
         # Create a new FeatureIndex
+        logger.debug('Creating %s feature index' % self.feature_type)
         self.feature_index = FeatureIndex(self.feature_type,self.gene_index)
+        logger.debug('Finished creating %s feature index' % self.feature_type)
         
         # Create a new Feature Buffer
         self.feature_buffer = Buffer(Feature)
@@ -178,6 +189,7 @@ class FeatureImporter(object):
                 if self.feature_count % 1000 == 0:
                     logger.debug('Added %i %ss' % (self.feature_count,self.feature_type.name))
                 
+        logger.debug('Saving %s features' % self.feature_type)
         self.save_features()
         
     def process_headers(self,headers):
@@ -231,13 +243,15 @@ class FeatureImporter(object):
         self.test_type,created = TestType.objects.get_or_create(name='expression_t_test')
 
         # Get a FeatureData index
+        logger.debug('Creating %s feature data index.' % self.feature_type)
         self.featuredata_index = FeatureDataIndex(self.dataset,self.feature_type)
-
+        logger.debug('Finished creating %s feature data index.' % self.feature_type)
 
         
         # Create a Test Buffer
         self.test_buffer = Buffer(TestResult)
     
+        logger.debug('Starting to loop over %s tests file' % self.feature_type)
         # Open the tests file
         with open(self.tests_file) as tests:
         
@@ -249,7 +263,10 @@ class FeatureImporter(object):
             for line in tests:
                 self.process_tests_line(line)
                 self.test_count += 1
+
+        logger.debug('Finished looping over %s tests file' % self.feature_type)
                 
+        logger.debug('Saving %s tests' % self.feature_type)
         self.save_tests()
     
     def process_tests_line(self,line):
@@ -275,14 +292,22 @@ class FeatureImporter(object):
         
     def save_features(self):
         
+        logger.debug('Processing %s feature buffer' % self.feature_type)
         self.feature_buffer.process()
+
+        logger.debug('Refreshing %s feature index' % self.feature_type)
         self.feature_index.refresh(self.gene_index)
+
+        logger.debug('Processing %s feature data buffer' % self.feature_type)
         self.data_buffer.process(self.feature_index)
+
         if self.tss_index:
+            logger.debug('Processing %s tss link buffer' % self.feature_type)
             self.tss_buffer.process(self.feature_index)
         
     def save_tests(self):
         
+        logger.debug('Processing %s tests buffer' % self.feature_type)
         self.test_buffer.process()
         
     def output(self):
@@ -366,11 +391,15 @@ class FeatureIndex(object):
         del self.features
         self.features = {}
         ids = gene_index.get_ids()
+        logger.debug('Getting %s feature list to refresh index' % self.feature_type)
         feature_list = Feature.objects.filter(gene__id__in = ids, type=self.feature_type).values('tracking_id','id')
+
+        logger.debug('Creating index from %s feature list' % self.feature_type)
         for feature in feature_list:
                 
             self.features[feature['tracking_id']] = feature['id']
         
+        logger.debug('Deleting %s feature list')
         del feature_list
        
     def __contains__(self,tracking_id):
@@ -382,9 +411,15 @@ class FeatureIndex(object):
 class FeatureDataIndex(object):
     def __init__(self,dataset,feature_type):
         self.data = {}
+
+        logger.debug('Getting %s feature data list to create index' % feature_type)
         featuredatas = FeatureData.objects.filter(feature__type=feature_type,sample__dataset=dataset).select_related('feature').select_related('sample')
+
+        logger.debug('Creating index from %s feature list' % feature_type)
         for featuredata in featuredatas:
             self.add(featuredata.feature.tracking_id,featuredata.sample.name,featuredata.pk)
+
+        logger.debug('Removing %s feature data list' % feature_type)
         del featuredatas
 
     def add(self,feature_tracking_id,sample_name,data_id):
@@ -579,7 +614,7 @@ class Buffer(object):
                 
         self.model.objects.bulk_create(unprocessed)
                 
-        logger.info('Added %i %ss in %f seconds.' % (len(self.objects),self.model.__name__,time.clock()-self.start_time))
+        #logger.info('Added %i %ss in %f seconds.' % (len(self.objects),self.model.__name__,time.clock()-self.start_time))
         del self.objects
         self.objects = []
             
@@ -615,6 +650,7 @@ class TssLinkBuffer(FeatureDataBuffer):
     def __init__(self):
         Buffer.__init__(self,FeatureLink)
         self.data_store = {}
+        self.count = 0
         
     def process(self,feature_index):
         for tracking_id in self.data_store:
