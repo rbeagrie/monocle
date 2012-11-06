@@ -436,10 +436,10 @@ class GeneIndex(object):
         self.genes = {}
         self.gene_ids = {}
         
-    def add(self,gene,tracking_id,old):
+    def add(self,gene_id,tracking_id,old):
     
-        self.genes[tracking_id] = gene.id,old
-        self.gene_ids[gene.pk] = tracking_id
+        self.genes[tracking_id] = gene_id,old
+        self.gene_ids[gene_id] = tracking_id
         
     def get_ids(self):
         
@@ -538,10 +538,10 @@ class NameSetParser(object):
             index = GeneNameIndex(ns,field)
             self.old_namesets.append( index )
             
-    def add_gene(self,gene):
+    def add_gene(self,gene_id):
         
         for new_name in self.incomplete_names:
-            new_name.gene = gene
+            new_name.gene_id = gene_id
             self.name_buffer.add(new_name)
             self.name_count += 1
             
@@ -551,18 +551,18 @@ class NameSetParser(object):
         
         old_names = []
         query_chain = Q()
-        gene = False
+        gene_id = False
         old = True
         
         for index in self.old_namesets:
             # This is an ugly hack, skip the short name as it may be duplicated.
             if index.field == 4:
                 continue
-            gene = index.parse(fields)
-            if gene:
+            gene_id = index.parse(fields)
+            if gene_id:
                 break
             
-        if not gene:
+        if not gene_id:
             for index in self.old_namesets:
                 name = index.get_name(fields)
                 ns = index.nameset
@@ -575,16 +575,17 @@ class NameSetParser(object):
             self.incomplete_names.append(GeneName(gene_name_set=ns,name=fields[field]))
         
         # Make a new gene if none was found
-        if not gene:
+        if not gene_id:
             gene = Gene(locus=fields[6],length=0)
             gene.save()
+            gene_id = gene.id
             old = False
             
         self.gene_count += 1
             
-        self.add_gene(gene)
+        self.add_gene(gene_id)
         
-        return gene,old
+        return gene_id,old
             
     def save(self):
         
