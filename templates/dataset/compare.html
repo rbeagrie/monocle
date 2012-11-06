@@ -14,7 +14,13 @@
 
 <h1>Compare {{ sample_1.name }} and {{ sample_2.name }}</h1>
 
+<h2>Scatter Plot for {{ sample_1.name }} against {{ sample_2.name }}</h2>
+
 <p><img src="{% url graph.views.samples sample_1.pk sample_2.pk %}" /></p>
+
+<h2>Volcano Plot for {{ sample_1.name }} against {{ sample_2.name }}</h2>
+
+<p><img src="{% url graph.views.volcano sample_1.pk sample_2.pk %}" /></p>
 
 <p><a href="{% url dataset.views.index %}">Back to datasets</a></p>
 

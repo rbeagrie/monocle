@@ -66,7 +66,8 @@ def detail(request, list_id):
     l = get_object_or_404(GeneList, pk=list_id)
     print l.genes.count()
     
-    datasets = Dataset.objects.filter(sample__featuredata__feature__gene__genelist=l).distinct()
+    #datasets = Dataset.objects.filter(sample__featuredata__feature__gene__genelist=l).distinct()
+    datasets = Dataset.objects.all()
     
     if l.genes.count() > 10:
         heat = True

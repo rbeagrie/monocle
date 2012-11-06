@@ -93,3 +93,12 @@ def samples(request, sample_1_id, sample_2_id):
     graph.add(sample_1,sample_2)
 
     return graph.response()
+
+def volcano(request, sample_1_id, sample_2_id):
+
+    sample_1 = get_object_or_404(Sample, pk=sample_1_id)
+    sample_2 = get_object_or_404(Sample, pk=sample_2_id)
+    graph = TestComparisonVolcano()
+    graph.add(sample_1,sample_2)
+
+    return graph.response()

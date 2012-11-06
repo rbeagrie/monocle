@@ -206,6 +206,37 @@ class BaseScatter(BaseGraph):
 
         return BaseGraph.response(self)
 
+class BaseVolcano(BaseGraph):
+    def __init__(self):
+        BaseGraph.__init__(self)
+        box = self.ax.get_position()
+        self.ax.set_position([box.x0, box.y0, box.width * 0.7, box.height])
+             
+    def add_data(self,data):
+    
+        x = map(lambda f: f.test_value,data)
+        y = map(lambda f: f.p_value,data)
+
+        # Take the log of the fpkm values
+        #x = np.log2(np.array(x))
+        y = 0 - np.log2(np.array(y))
+
+        # Remove any -Inf values
+        filter_fun = lambda t: ((t[0] > -20) and (t[1] > -20) and (t[0] < 200) and (t[1] < 20000))
+
+        x,y = zip(*filter(filter_fun,zip(x,y)))
+
+        gene_line = self.ax.plot(x,y,'.',zorder=10,label='Gene',color=self.next_color())
+        
+        return gene_line[0]
+   
+    def response(self):
+        self.ax.set_xlabel('Log2( Fold Change )')
+        self.ax.set_ylabel('-Log2( P-Value )')
+        
+        self.ax.legend(self.legend_entries.values(),self.legend_entries.keys(),loc='center left', bbox_to_anchor=(1, 0.5))
+
+        return BaseGraph.response(self)
 
 class BaseBar(BaseGraph):
 
@@ -318,12 +349,28 @@ class BaseSampleComparison(BaseGraph):
         self.sample_1 = sample_1
         self.sample_2 = sample_2
         feature_type = FeatureType.objects.get(name='gene')
-        features = Feature.objects.filter(type=feature_type).filter(featuredata__sample=sample_1).filter(featuredata__sample=sample_2)
+        features = list(Feature.objects.filter(type=feature_type).filter(featuredata__sample=sample_1).filter(featuredata__sample=sample_2))
         sample_1_data = FeatureData.objects.filter(sample=sample_1,feature__in=features).order_by('feature')
         sample_2_data = FeatureData.objects.filter(sample=sample_2,feature__in=features).order_by('feature')
 
         line = self.add_data(sample_1_data,sample_2_data)
         self.legend_entries['Gene FPKM'] = line
+
+class BaseTestComparison(BaseGraph):
+    
+    def add(self,sample_1,sample_2):
+        self.sample_1 = sample_1
+        self.sample_2 = sample_2
+        feature_type = FeatureType.objects.get(name='gene')
+        
+        data = TestResult.objects.filter(data1__sample=sample_1,data2__sample=sample_2,data1__feature__type=feature_type,p_value__gte=0.05)
+        line = self.add_data(data)
+        self.legend_entries['Not Significant'] = line
+
+        data = TestResult.objects.filter(data1__sample=sample_1,data2__sample=sample_2,data1__feature__type=feature_type,p_value__lt=0.05)
+        line = self.add_data(data)
+        self.legend_entries['Significant'] = line
+
 
 class GeneBar(BaseBar,BaseGene):
     pass
@@ -453,4 +500,7 @@ class DatasetHistogram(BaseHistogram,BaseDataset):
     pass
 
 class SampleComparisonScatter(BaseScatter,BaseSampleComparison):
+    pass
+
+class TestComparisonVolcano(BaseVolcano,BaseTestComparison):
     pass
