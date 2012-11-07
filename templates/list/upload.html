@@ -3,9 +3,9 @@
 {% block breadcrumb %}<a href="{% url list.views.index %}">Gene Lists</a> | <strong>Upload New List</strong>{% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
-		<li><a href="{% url list.views.index %}">View Gene Lists</a></li>
-		<li class="active"><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Genes</a></li>
+		<li><a href="{% url dataset.views.index %}">Datasets</a></li>
+		<li class="active"><a href="{% url list.views.index %}">Gene Lists</a></li>
 		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 

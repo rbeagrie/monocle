@@ -3,9 +3,9 @@
 {% block breadcrumb %}<a href="{% url dataset.views.index %}">Datasets</a> / <a href="{% url dataset.views.detail sample_1.dataset.pk %}">{{ sample_1.dataset }}</a> / <strong>Compare {{ sample_1.name }} and {{ sample_2.name }}</strong> {% endblock %}
 
 {% block nav %}
-		<li class="first"><a href="{% url gene.views.index %}">Search Genes</a></li>
-		<li class="active"><a href="{% url list.views.index %}">View Gene Lists</a></li>
-		<li><a href="{% url list.views.upload %}">Upload Gene List</a></li>
+		<li class="first"><a href="{% url gene.views.index %}">Genes</a></li>
+		<li class="active"><a href="{% url dataset.views.index %}">Datasets</a></li>
+		<li><a href="{% url list.views.index %}">Gene Lists</a></li>
 		<li><a href="{% url django.contrib.auth.views.logout_then_login %}">Logout</a></li>
 		{% endblock %}
 
