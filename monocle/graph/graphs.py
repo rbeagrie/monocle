@@ -3,10 +3,12 @@ from list.models import *
 
 import django
 
+import matplotlib
+matplotlib.use('AGG')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.dates import DateFormatter
-import matplotlib, pylab
+import pylab
 import numpy as np
 from scipy.stats import gaussian_kde
 

@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.utils.datastructures import MultiValueDictKeyError
 from django.template import RequestContext
-from django.core.files.temp import TemporaryFile
 from gene.models import *
 from list.models import *
 from  graphs import *
@@ -69,7 +68,7 @@ def list(request, list_id, dataset_id):
     graph = GeneListBoxplot()
     
     for sample in samples:
-        FPKMS = numpy.array(map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list))) + 1.0
+        FPKMS = numpy.array(map( lambda fd : fd.value , FeatureData.objects.filter(sample=sample,feature__type__name='gene',feature__gene__genelist=list).exclude(value=0.0)))
         graph.add_sample(sample.name,FPKMS)
         
     graph.ax.set_title('List #%i - %s' % (list.pk,list.name))

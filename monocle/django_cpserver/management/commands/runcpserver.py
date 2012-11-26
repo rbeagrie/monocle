@@ -250,7 +250,7 @@ def runcpserver(argset=[], **kwargs):
     logger.debug('Turned logging on')
     # Start the webserver
     print 'starting server with options %s' % options
-    webbrowser.open('http://localhost:9000/')
+    #webbrowser.open('http://localhost:9000/')
     start_server(options)
 
 
