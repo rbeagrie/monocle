@@ -22,6 +22,38 @@
 
 <p><img src="{% url graph.views.volcano sample_1.pk sample_2.pk %}" /></p>
 
+<h2>Top 10 genes by fold change</h2>
+
+<table class='table1'>
+
+<tr>
+    <th>Gene</th>
+    <th>FPKM in {{ sample_1.name }}</th>
+    <th>FPKM in {{ sample_2.name }}</th>
+    <th>Fold Change</th>
+    <th>P-Value</th>
+<tr>
+
+{% for point in data %}
+
+<tr>
+
+    <td><a href="{% url gene.views.detail point.gene.pk %}">{{ point.gene }}</a></td>
+    <td>{{ point.value1 }}</td>
+    <td>{{ point.value2 }}</td>
+    <td>{{ point.change }}</td>
+    <td>{{ point.p_value }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<p>&nbsp;</p>
+
+<p><a href="{% url dataset.views.compare_genes sample_1.pk sample_2.pk 1 %}">View more genes</a></p>
+
 <p><a href="{% url dataset.views.index %}">Back to datasets</a></p>
 
 {% endblock %}
