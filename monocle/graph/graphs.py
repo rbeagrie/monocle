@@ -365,11 +365,17 @@ class BaseTestComparison(BaseGraph):
         self.sample_2 = sample_2
         feature_type = FeatureType.objects.get(name='gene')
         
-        data = TestResult.objects.filter(data1__sample=sample_1,data2__sample=sample_2,data1__feature__type=feature_type,p_value__gte=0.05)
+        self.sample_1,self.sample_2,data = TestResult.objects.compare_samples(self.sample_1,self.sample_2,feature_type)
+        print data.count()
+        data = data.filter(p_value__gte=0.05)
+        print data.count()
         line = self.add_data(data)
         self.legend_entries['Not Significant'] = line
 
-        data = TestResult.objects.filter(data1__sample=sample_1,data2__sample=sample_2,data1__feature__type=feature_type,p_value__lt=0.05)
+        self.sample_1,self.sample_2,data = TestResult.objects.compare_samples(self.sample_1,self.sample_2,feature_type)
+        print data.count()
+        data = data.filter(p_value__lt=0.05)
+        print data.count()
         line = self.add_data(data)
         self.legend_entries['Significant'] = line
 

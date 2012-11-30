@@ -1,5 +1,6 @@
 from django.db import models
 import numpy as np
+from gene.exceptions import NoComparisonAvailable
 
 class Gene(models.Model):
     locus = models.CharField(max_length=45)
@@ -149,6 +150,32 @@ class TestType(models.Model):
     name = models.CharField(max_length=70)
     description = models.TextField()
     
+class TestResultManager(models.Manager):
+    def compare_samples(self,sample1,sample2,feature_type):
+        
+        def try_filter():
+            qs = self.filter(data1__sample=sample1,data2__sample=sample2,data1__feature__type=feature_type)
+
+            if qs.count():
+                return qs
+            else:
+                return False
+
+        qs = try_filter()
+        if qs:
+            return sample1,sample2,qs
+
+        # Try the samples in the other order
+        temp = sample1
+        sample1 = sample2
+        sample2 = temp
+        
+        qs = try_filter()
+        if qs:
+            return sample1,sample2,qs
+        else:
+            raise NoComparisonAvailable('There is no comparison data available for %s against %s')
+        
 class TestResult(models.Model):
     type = models.ForeignKey(TestType)
     data1 = models.ForeignKey(FeatureData,related_name='test_data_1')
@@ -158,6 +185,7 @@ class TestResult(models.Model):
     status = models.CharField(max_length=45)
     p_value = models.FloatField()
     q_value = models.FloatField()
+    objects = TestResultManager()
 
 class FeatureLink(models.Model):
     feature1 = models.ForeignKey(Feature, related_name = 'parent')

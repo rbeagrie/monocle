@@ -1,0 +1,2 @@
+class NoComparisonAvailable(Exception):
+    pass

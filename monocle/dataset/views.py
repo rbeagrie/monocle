@@ -51,8 +51,9 @@ def compare_genes(request,sample_1_id,sample_2_id,page=1):
 
     feature_type = FeatureType.objects.get(name='gene')
         
-    genes = TestResult.objects.filter(data1__sample=sample_1,data2__sample=sample_2,data1__feature__type=feature_type,data1__value__gt=0.0).order_by('-test_value')
-
+    sample_1,sample_2,genes = TestResult.objects.compare_samples(sample_1,sample_2,feature_type)
+    genes = genes.filter(data1__value__gt=0.0).filter(data2__value__gt=0.0).order_by('-test_value').select_related()
+    
     paginator = Paginator(genes, 25) # Show 25 contacts per page
 
     try:

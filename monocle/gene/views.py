@@ -5,6 +5,7 @@ from django.contrib.auth import logout
 from django.utils.datastructures import MultiValueDictKeyError
 from django.template import RequestContext
 from gene.models import *
+from django.core.exceptions import ObjectDoesNotExist
 from list.models import *
 import numpy
 import django
@@ -74,7 +75,7 @@ def search(request):
     gene_id=request.GET['gene']
     try:
         names = GeneName.from_name(gene_id)
-    except GeneName.DoesNotExist:
+    except ObjectDoesNotExist:
         return render_to_response('gene/index.html',{'error_message':'The gene %s does not exist in the database.'%gene_id} ,context_instance=RequestContext(request))
                 
     if len(names) == 1:
