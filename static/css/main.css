@@ -179,6 +179,12 @@ hr {margin: 1em 0;background:#f2f2f2;height:1px;color:#f2f2f2;border:none;clear:
 	.pagination p span {text-decoration:none;background:#fff;padding:2px 5px;border: 1px solid #ccc;color:#ccc}
 	.pagination * {margin:0}
 	.pagination h4 {margin-top:-1.45em;padding:0;border:none}
+
+    .add-new {margin: 2.5em 0 1.5em;}
+    .add-new p {text-align:center;}
+    .add-new p a:link, .add-new p a:visited {color:#000}
+    .add-new p a {background: #f2f2f2 url("images/list-add.png") no-repeat left center; padding: 4px 4px 4px 37px;border: 1px solid #ddd; font-weight:bold}
+    .add-new p a:hover {color:#c00}
 	
 	#resultslist-wrap {margin: 0 0 1.5em;font-size:92%}
 	#resultslist-wrap dt, #resultslist-wrap dl {margin: 0}
